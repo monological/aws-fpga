@@ -36,7 +36,7 @@ processing, and runs mostly in Linux user-space.
 The following diagram shows the high level architecture for the Virtual
 Ethernet sample application(s) and Bringup/Debug tools.
 
-|alt tag|
+.. image:: ./../../../_static/sdk/apps/virtual-ethernet/Virtual_Ethernet_Arch.jpg
 
 User Space
 ----------

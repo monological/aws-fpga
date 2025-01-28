@@ -34,3 +34,19 @@ Unsupported Features
 
 Known Bugs/Issues
 -----------------
+
+- HBM ECC Scrubbing is not supported in Small Shell `0x10212415`:
+
+  - DO NOT enable the "Enable ECC Scrubbing" or the
+    "Initialize Memory Using ECC" option in the HBM IP. Enabling either option
+    will cause an HBM monitor interface timeout during AFI loading, making the
+    HBM inaccessible. Refer to `AWS Shell Interface Specification
+    <./AWS_Shell_Interface_Specification.html>`__ for details.
+
+  - ECC protection remains available. Developers can enable only the
+    "Enable ECC Correction" option in the IP configuration to use it.
+    **Note: Reading from uninitialized memory locations will result
+    in ECC errors**.
+
+  - Support for the "Enable ECC Scrubbing" and "Initialize Memory Using ECC"
+    options will be added in a future shell release.

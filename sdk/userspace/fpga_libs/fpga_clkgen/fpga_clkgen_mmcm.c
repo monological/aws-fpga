@@ -14,6 +14,7 @@
  */
 
 #include "fpga_clkgen_mmcm.h"
+#include <utils/lcd.h>
 #include <utils/log.h>
 #include <hal/fpga_common.h>
 
@@ -98,22 +99,38 @@ int mmcm_init(enum fpga_clkgen_mmcm_group group, pci_bar_handle_t handle) {
         mmcm->clk_avails[i] = clks_avail_shifted & clock_avail_mask;
         mmcm->clk_cfg_regs[i] = clk_cfg_regs[i];
         mmcm->clk_div_has_frac[i] = clk_div_has_frac[i];
+        if (mmcm->clk_avails[i]) {
+            mmcm->any_clocks_available = 1;
+        }
     }
 
 out:
     return rc;
 }
 
-int mmcm_clk_avail(enum fpga_clkgen_mmcm_group group, uint32_t clk_index, bool* is_avail) {
-    int rc = 0;
+int mmcm_clk_avail_any(enum fpga_clkgen_mmcm_group group, bool* is_avail) {
     struct fpga_clkgen_mmcm* mmcm = get_mmcm(group);
-    fail_on_with_code(mmcm == NULL, out, rc, FPGA_ERR_SOFTWARE_PROBLEM, "invalid mmcm pointer");
-    fail_on_with_code(clk_index >= mmcm->num_clocks, out, rc, FPGA_ERR_SOFTWARE_PROBLEM, "invalid clk_index");
-    fail_on_with_code(is_avail == NULL, out, rc, FPGA_ERR_SOFTWARE_PROBLEM, "invalid is_avail pointer");
+    fail_on_quiet(mmcm == NULL, out, "invalid mmcm pointer");
+    fail_on_quiet(is_avail == NULL, out, "invalid is_avail pointer");
+
+    *is_avail = mmcm->any_clocks_available;
+    return 0;
+out:
+    *is_avail = false;
+    return 0;
+}
+
+int mmcm_clk_avail(enum fpga_clkgen_mmcm_group group, uint32_t clk_index, bool* is_avail) {
+    struct fpga_clkgen_mmcm* mmcm = get_mmcm(group);
+    fail_on_quiet(mmcm == NULL, out, "invalid mmcm pointer");
+    fail_on_quiet(clk_index >= mmcm->num_clocks, out, "invalid clk_index");
+    fail_on_quiet(is_avail == NULL, out, "invalid is_avail pointer");
 
     *is_avail = mmcm->clk_avails[clk_index];
+    return 0;
 out:
-    return rc;
+    *is_avail = false;
+    return 0;
 }
 
 int mmcm_is_locked(enum fpga_clkgen_mmcm_group group, bool* is_locked) {
@@ -140,10 +157,17 @@ int mmcm_wait_for_locked(enum fpga_clkgen_mmcm_group group) {
 
     uint64_t status_reg_offset = mmcm->mmcm_base_offset + MMCM_STATUS_REG;
     uint32_t status_reg_value = 0;
-    do {
+    while (loop_count < MAX_CLKGEN_LOOP_RETRIES) {
         rc = fpga_pci_peek(mmcm->handle, status_reg_offset, &status_reg_value);
         fail_on(rc, out, "Failed to read from register @0x%08lx", status_reg_offset);
-    } while ((status_reg_value != MMCM_STATUS_LOCKED) && (loop_count < MAX_CLKGEN_LOOP_RETRIES));
+
+        if (status_reg_value == MMCM_STATUS_LOCKED) {
+            break;
+        }
+
+        msleep(AWS_CLKGEN_LOOP_DELAY_MS);
+        ++loop_count;
+    }
 
     fail_on_with_code(loop_count >= MAX_CLKGEN_LOOP_RETRIES, out, rc, FPGA_ERR_HARDWARE_BUSY, "Timeout: MMCM not locked after %d iterations. MMCM address = 0x%08lx\n", loop_count, status_reg_offset);
 
@@ -239,6 +263,22 @@ int mmcm_load_cfg(enum fpga_clkgen_mmcm_group group, uint32_t reset) {
     uint32_t load_cfg_reg_value = reset ? 0x1 : 0x3;
     rc = fpga_pci_poke(mmcm->handle, load_cfg_reg_offset, load_cfg_reg_value);
     fail_on(rc, out, "Failed to write to register @ 0x%08lx, value = 0x%08x", load_cfg_reg_offset, load_cfg_reg_value);
+
+out:
+    return rc;
+}
+
+int mmcm_get_expected_lock_mask(uint32_t* lock_mask) {
+    int rc = 0;
+    *lock_mask = 0;
+    enum fpga_clkgen_mmcm_group groups[] = {clkgen_group_a, clkgen_group_b, clkgen_group_c, clkgen_group_hbm};
+
+    for (uint32_t i = 0; i < sizeof(groups) / sizeof(groups[0]); ++i) {
+        struct fpga_clkgen_mmcm* mmcm = get_mmcm(groups[i]);
+        fail_on(mmcm == NULL, out, "invalid mmcm pointer");
+
+        *lock_mask |= mmcm->any_clocks_available ? (1 << mmcm->lock_bit) : 0;
+    }
 
 out:
     return rc;

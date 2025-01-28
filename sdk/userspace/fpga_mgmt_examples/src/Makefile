@@ -18,10 +18,10 @@ TOPINC_PATH = $(TOP)/include
 FPGAHALINC_PATH = $(TOPINC_PATH)/hal
 LIB_PATH = $(TOP)/lib
 
-INCLUDES = -I$(FPGAHALINC_PATH) -I$(TOP)/include -I../. -I.
+INCLUDES = -I$(FPGAHALINC_PATH) -I$(TOPINC_PATH) -I../. -I.
 
-#OPT=-O2
-CFLAGS=$(OPT) -g  -Wall -Werror -W -Wno-parentheses -Wstrict-prototypes -Wmissing-prototypes $(INCLUDES)
+OPT=-DFPGA_ALLOW_NON_ROOT -DCONFIG_LOGLEVEL=1
+CFLAGS=$(OPT) -g -Wall -Werror -W -Wno-parentheses -Wstrict-prototypes -Wmissing-prototypes $(INCLUDES)
 
 LDFLAGS = -L$(LIB_PATH)/so
 LDLIBS = -lfpga_mgmt
@@ -32,20 +32,19 @@ LDLIBS_STATIC = -lfpga_mgmt -lrt -lpthread
 
 UTILLCDLIB = $(LIB_PATH)/libutils.a
 LIBS=$(UTILLCDLIB)
-VTAG_XVC_SRC = virtual_jtag_pcie.c virtual_jtag_server.c
 
-SRC = fpga_local_cmd.c fpga_local_cmd_parse.c $(VTAG_XVC_SRC)
 OBJ = $(SRC:.c=.o)
-BIN = fpga-local-cmd
-BIN_STATIC = static-fpga-local-cmd
 
-all: $(BIN) $(BIN_STATIC)
+BINS = clear_single_fpga clear_multiple_fpga load_single_fpga load_multiple_fpga prefetch_multiple_afi
+STATIC_BINS = clear_single_fpga clear_multiple_fpga load_single_fpga load_multiple_fpga prefetch_multiple_afi
 
-$(BIN): $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+all: $(BINS) $(addprefix static_,$(STATIC_BINS))
 
-$(BIN_STATIC): $(OBJ)
-	$(CC) -o $@ $^ $(LDFLAGS_STATIC) $(LDLIBS_STATIC)
+%:: %.c
+	$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS) $(CFLAGS)
+
+static_%:: %.c
+	$(CC) -o $@ $^ $(LDFLAGS_STATIC) $(LDLIBS_STATIC) $(CFLAGS)
 
 clean:
-	rm -f *.o *.a $(BIN) $(BIN_STATIC)
+	rm -f *.o *.a $(BINS) $(addprefix static_,$(STATIC_BINS))

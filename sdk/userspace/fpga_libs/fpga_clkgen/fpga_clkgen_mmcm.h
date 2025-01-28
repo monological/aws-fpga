@@ -20,9 +20,8 @@
 //
 // AWS_CLK_GEN API specific macros
 //
-#ifndef MAX_CLKGEN_LOOP_RETRIES
-#define MAX_CLKGEN_LOOP_RETRIES (1000000)
-#endif
+#define MAX_CLKGEN_LOOP_RETRIES (100)
+#define AWS_CLKGEN_LOOP_DELAY_MS (50)
 
 #ifndef AWS_CLKGEN_DEBUG_LEVEL
 #define AWS_CLKGEN_DEBUG_LEVEL (0)
@@ -76,6 +75,7 @@ struct fpga_clkgen_mmcm {
     uint32_t avail_bit_start;
     uint32_t num_clocks;
     uint32_t clk_avails[MAX_CLKS_IN_MMCM];
+    uint32_t any_clocks_available;
     bool clk_div_has_frac[MAX_CLKS_IN_MMCM];
 };
 
@@ -87,6 +87,7 @@ enum fpga_clkgen_mmcm_group {
 };
 
 int mmcm_init(enum fpga_clkgen_mmcm_group group, pci_bar_handle_t handle);
+int mmcm_clk_avail_any(enum fpga_clkgen_mmcm_group group, bool* is_avail);
 int mmcm_clk_avail(enum fpga_clkgen_mmcm_group group, uint32_t clk_index, bool* is_avail);
 int mmcm_is_locked(enum fpga_clkgen_mmcm_group group, bool* is_locked);
 int mmcm_wait_for_locked(enum fpga_clkgen_mmcm_group group);
@@ -95,3 +96,4 @@ int mmcm_get_shared_clock(enum fpga_clkgen_mmcm_group group, uint32_t* mult, uin
 int mmcm_set_clk_div(enum fpga_clkgen_mmcm_group group, uint32_t clk_index, uint32_t div, uint32_t div_frac);
 int mmcm_get_clk_div(enum fpga_clkgen_mmcm_group group, uint32_t clk_index, uint32_t* div, uint32_t* div_frac);
 int mmcm_load_cfg(enum fpga_clkgen_mmcm_group group, uint32_t reset);
+int mmcm_get_expected_lock_mask(uint32_t* lock_mask);

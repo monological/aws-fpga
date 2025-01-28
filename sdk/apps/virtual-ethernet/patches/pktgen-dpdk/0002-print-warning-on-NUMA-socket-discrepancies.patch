@@ -1,0 +1,31 @@
+diff --git a/app/pktgen.c b/app/pktgen.c
+index 6598399..1324430 100644
+--- a/app/pktgen.c
++++ b/app/pktgen.c
+@@ -1247,7 +1247,7 @@ pktgen_main_rxtx_loop(uint8_t lid)
+         int dev_sock = rte_eth_dev_socket_id(pid);
+ 
+         if (dev_sock != SOCKET_ID_ANY && dev_sock != (int)rte_socket_id())
+-            pktgen_log_panic(
++            pktgen_log_warning(
+                 "*** port %u on socket ID %u has different socket ID than lcore %u socket ID %d\n",
+                 pid, rte_eth_dev_socket_id(pid), rte_lcore_id(), rte_socket_id());
+     }
+@@ -1343,7 +1343,7 @@ pktgen_main_tx_loop(uint8_t lid)
+         int dev_sock = rte_eth_dev_socket_id(pid);
+ 
+         if (dev_sock != SOCKET_ID_ANY && dev_sock != (int)rte_socket_id())
+-            pktgen_log_panic(
++            pktgen_log_warning(
+                 "*** port %u on socket ID %u has different socket ID than lcore %u on socket "
+                 "ID %d\n",
+                 pid, rte_eth_dev_socket_id(pid), rte_lcore_id(), rte_socket_id());
+@@ -1426,7 +1426,7 @@ pktgen_main_rx_loop(uint8_t lid)
+         int dev_sock = rte_eth_dev_socket_id(pid);
+ 
+         if (dev_sock != SOCKET_ID_ANY && dev_sock != (int)rte_socket_id())
+-            pktgen_log_panic(
++            pktgen_log_warning(
+                 "*** port %u on socket ID %u has different socket ID than lcore %u socket ID %d\n",
+                 pid, rte_eth_dev_socket_id(pid), rte_lcore_id(), rte_socket_id());
+     }

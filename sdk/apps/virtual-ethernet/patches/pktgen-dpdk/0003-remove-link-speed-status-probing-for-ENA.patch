@@ -1,0 +1,13 @@
+diff --git a/app/pktgen-stats.c b/app/pktgen-stats.c
+index 798f11f..995708a 100644
+--- a/app/pktgen-stats.c
++++ b/app/pktgen-stats.c
+@@ -273,7 +273,7 @@ pktgen_get_link_status(port_info_t *info, int pid, int wait)
+     }
+ 
+     /* Setup a few default values to prevent problems later. */
+-    info->link.link_speed  = RTE_ETH_SPEED_NUM_10G;
++    info->link.link_speed  = RTE_ETH_SPEED_NUM_100G;
+     info->link.link_duplex = RTE_ETH_LINK_FULL_DUPLEX;
+ }
+ 

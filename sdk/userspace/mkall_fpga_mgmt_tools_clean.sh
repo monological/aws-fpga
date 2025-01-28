@@ -61,3 +61,6 @@ build_exec
 
 BUILD_DIR="fpga_mgmt_tools/src"
 build_exec
+
+BUILD_DIR="fpga_mgmt_examples/src"
+build_exec

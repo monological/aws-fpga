@@ -61,3 +61,19 @@ instance.
 
 Please reach out to the AWS FPGA team with any instability issues so we
 can help as soon as possible.
+
+Additional SDK Documentation
+----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   apps/virtual-ethernet/README
+   apps/virtual-ethernet/doc/SDE_HW_Guide
+   apps/virtual-ethernet/doc/Virtual_Ethernet_Application_Guide
+
+   userspace/fpga_mgmt_examples/README
+
+   userspace/fpga_mgmt_tools/README
+
+`Back to Home <../index.html>`__

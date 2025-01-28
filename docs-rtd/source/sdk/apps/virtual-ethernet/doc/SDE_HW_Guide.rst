@@ -76,7 +76,7 @@ Feature List
 Architecture
 ============
 
-|SDE_Block_Diagram|
+.. image:: ./../../../../_static/sdk/apps/virtual-ethernet/SDE_Block_Diagram.jpg
 
 The SDE uses shell's PCIM AXI4 interface to move packets between the AXI
 Streaming interface and the host. It implements a store and forward

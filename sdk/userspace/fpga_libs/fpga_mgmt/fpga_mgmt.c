@@ -27,8 +27,8 @@
 
 /** Synchronous API (load/clear) default timeout and delay msecs */
 #define FPGA_MGMT_SYNC_TIMEOUT		90000
-#define FPGA_MGMT_RL_RELOAD_DELAY	1000
-#define FPGA_MGMT_RL_RELOAD_RETRIES	15
+#define FPGA_MGMT_RL_RELOAD_DELAY       3000
+#define FPGA_MGMT_RL_RELOAD_RETRIES     10
 #define FPGA_MGMT_SYNC_DELAY_MSEC	2
 
 struct fgpa_mgmt_state_s fpga_mgmt_state = {
@@ -69,7 +69,7 @@ void fpga_mgmt_set_cmd_delay_msec(uint32_t value)
 	fpga_mgmt_state.delay_msec = value;
 }
 
-static 
+static
 int fpga_mgmt_get_sh_version(int slot_id, uint32_t *sh_version)
 {
 	pci_bar_handle_t handle = PCI_BAR_HANDLE_INIT;
@@ -225,7 +225,7 @@ const char *fpga_mgmt_get_status_name(int status)
 	return FPGA_STATUS2STR(status);
 }
 
-const char *fpga_mgmt_strerror(int err) 
+const char *fpga_mgmt_strerror(int err)
 {
 	if (err < 0) {
 		return strerror(-err);
@@ -324,7 +324,7 @@ const char *fpga_mgmt_strerror_long(int err)
 	}
 }
 
-int fpga_mgmt_clear_local_image(int slot_id) 
+int fpga_mgmt_clear_local_image(int slot_id)
 {
 	int ret;
 	uint32_t len;
@@ -352,9 +352,9 @@ out:
 	return ret;
 }
 
-int fpga_mgmt_clear_local_image_sync(int slot_id, 
+int fpga_mgmt_clear_local_image_sync(int slot_id,
 		uint32_t timeout, uint32_t delay_msec,
-		struct fpga_mgmt_image_info *info) 
+		struct fpga_mgmt_image_info *info)
 {
 	struct fpga_mgmt_image_info tmp_info;
 	struct fpga_pci_resource_map app_map;
@@ -379,8 +379,8 @@ int fpga_mgmt_clear_local_image_sync(int slot_id,
 
 	memset(&tmp_info, 0, sizeof(tmp_info));
 
-	/** 
-	 * Get the current SH version and PCI resource map for the app_pf 
+	/**
+	 * Get the current SH version and PCI resource map for the app_pf
 	 * that will be used after the clear has completed.
 	 */
 	ret = fpga_mgmt_get_sh_version(slot_id, &prev_sh_version);
@@ -401,13 +401,13 @@ int fpga_mgmt_clear_local_image_sync(int slot_id,
 		if (status == FPGA_STATUS_CLEARED) {
 			done = true;
 		} else if (status == FPGA_STATUS_BUSY) {
-			fail_on(ret = (retries >= timeout_tmp) ? -ETIMEDOUT : 0, out, 
+			fail_on(ret = (retries >= timeout_tmp) ? -ETIMEDOUT : 0, out,
 					"fpga_mgmt_describe_local_image timed out, status=%s(%d), retries=%u",
 					FPGA_STATUS2STR(status), status, retries);
 			retries++;
 			msleep(delay_msec_tmp);
 		} else {
-			/** 
+			/**
 			 * Catch error status cases here.
 			 *  -the caller can then display the error status and cause upon return.
 			 */
@@ -429,17 +429,17 @@ int fpga_mgmt_clear_local_image_sync(int slot_id,
 			(afi_device_ids->device_id == app_map.device_id) &&
 			(afi_device_ids->svid == app_map.subsystem_vendor_id) &&
 			(afi_device_ids->ssid == app_map.subsystem_device_id))) {
-		/** 
-		 * Perform a PCI device remove and recan in order to expose the default AFI 
+		/**
+		 * Perform a PCI device remove and recan in order to expose the default AFI
 		 * Vendor and Device Id.
 		 */
 		log_info("remove+rescan required, sh_version=0x%08x, prev_sh_version=0x%08x, "
 				"expected_ids={0x%04x, 0x%04x, 0x%04x, 0x%04x}, "
 				"sysfs_ids={0x%04x, 0x%04x, 0x%04x, 0x%04x}",
 				sh_version, prev_sh_version,
-				afi_device_ids->vendor_id, afi_device_ids->device_id, 
+				afi_device_ids->vendor_id, afi_device_ids->device_id,
 				afi_device_ids->svid, afi_device_ids->ssid,
-				app_map.vendor_id, app_map.device_id, 
+				app_map.vendor_id, app_map.device_id,
 				app_map.subsystem_vendor_id, app_map.subsystem_device_id);
 
 		ret = fpga_pci_rescan_slot_app_pfs(slot_id);
@@ -511,7 +511,7 @@ out:
 
 int fpga_mgmt_load_local_image_sync(int slot_id, char *afi_id,
 		uint32_t timeout, uint32_t delay_msec,
-		struct fpga_mgmt_image_info *info) 
+		struct fpga_mgmt_image_info *info)
 {
 	return fpga_mgmt_load_local_image_sync_flags(slot_id, afi_id, 0,
 		timeout, delay_msec, info);
@@ -519,7 +519,7 @@ int fpga_mgmt_load_local_image_sync(int slot_id, char *afi_id,
 
 int fpga_mgmt_load_local_image_sync_flags(int slot_id, char *afi_id, uint32_t flags,
 		uint32_t timeout, uint32_t delay_msec,
-		struct fpga_mgmt_image_info *info) 
+		struct fpga_mgmt_image_info *info)
 {
 	union fpga_mgmt_load_local_image_options opt;
 
@@ -533,7 +533,7 @@ int fpga_mgmt_load_local_image_sync_flags(int slot_id, char *afi_id, uint32_t fl
 }
 int fpga_mgmt_load_local_image_sync_with_options(union fpga_mgmt_load_local_image_options *opt,
 		uint32_t timeout, uint32_t delay_msec,
-		struct fpga_mgmt_image_info *info) 
+		struct fpga_mgmt_image_info *info)
 {
 	struct fpga_mgmt_image_info tmp_info;
 	struct fpga_pci_resource_map app_map;
@@ -557,9 +557,9 @@ int fpga_mgmt_load_local_image_sync_with_options(union fpga_mgmt_load_local_imag
 	fail_on_with_code(opt->slot_id >= FPGA_SLOT_MAX, out, ret, -EINVAL, "invalid slot");
 
 	memset(&tmp_info, 0, sizeof(tmp_info));
-	
-	/** 
-	 * Get the current SH version and PCI resource map for the app_pf 
+
+	/**
+	 * Get the current SH version and PCI resource map for the app_pf
 	 * that will be used after the load has completed.
 	 */
 	ret = fpga_mgmt_get_sh_version(opt->slot_id, &prev_sh_version);
@@ -578,11 +578,14 @@ int fpga_mgmt_load_local_image_sync_with_options(union fpga_mgmt_load_local_imag
 
 		status = (ret == 0) ? tmp_info.status : FPGA_STATUS_END;
 		if (status == FPGA_STATUS_LOADED) {
-			/** Sanity check the afi_id */
-			ret = (strncmp(opt->afi_id, tmp_info.ids.afi_id, sizeof(tmp_info.ids.afi_id))) ?
-				FPGA_ERR_FAIL : 0;
-			fail_on(ret, out, "AFI ID mismatch: requested afi_id=%s, loaded afi_id=%s",
-					opt->afi_id, tmp_info.ids.afi_id);
+			if ((FPGA_CMD_PREFETCH & opt->flags) != FPGA_CMD_PREFETCH) {
+				/** Sanity check the afi_id */
+				ret = (strncmp(opt->afi_id, tmp_info.ids.afi_id, sizeof(tmp_info.ids.afi_id))) ?
+					FPGA_ERR_FAIL : 0;
+				fail_on(ret, out, "AFI ID mismatch: requested afi_id=%s, loaded afi_id=%s",
+						opt->afi_id, tmp_info.ids.afi_id);
+			}
+
 			done = true;
 		} else if (status == FPGA_STATUS_BUSY) {
 			fail_on(ret = (retries >= timeout_tmp) ? -ETIMEDOUT : 0, out,
@@ -591,7 +594,7 @@ int fpga_mgmt_load_local_image_sync_with_options(union fpga_mgmt_load_local_imag
 			retries++;
 			msleep(delay_msec_tmp);
 		} else {
-			/** 
+			/**
 			 * Catch error status cases here.
 			 *  -the caller can then display the error status and cause upon return.
 			 */
@@ -613,17 +616,17 @@ int fpga_mgmt_load_local_image_sync_with_options(union fpga_mgmt_load_local_imag
 			(afi_device_ids->device_id == app_map.device_id) &&
 			(afi_device_ids->svid == app_map.subsystem_vendor_id) &&
 			(afi_device_ids->ssid == app_map.subsystem_device_id))) {
-		/** 
-		 * Perform a PCI device remove and recan in order to expose the unique AFI 
+		/**
+		 * Perform a PCI device remove and recan in order to expose the unique AFI
 		 * Vendor and Device Id.
 		 */
 		log_info("remove+rescan required, sh_version=0x%08x, prev_sh_version=0x%08x, "
 				"expected_ids={0x%04x, 0x%04x, 0x%04x, 0x%04x}, "
 				"sysfs_ids={0x%04x, 0x%04x, 0x%04x, 0x%04x}",
 				sh_version, prev_sh_version,
-				afi_device_ids->vendor_id, afi_device_ids->device_id, 
+				afi_device_ids->vendor_id, afi_device_ids->device_id,
 				afi_device_ids->svid, afi_device_ids->ssid,
-				app_map.vendor_id, app_map.device_id, 
+				app_map.vendor_id, app_map.device_id,
 				app_map.subsystem_vendor_id, app_map.subsystem_device_id);
 
 		ret = fpga_pci_rescan_slot_app_pfs(opt->slot_id);
@@ -641,7 +644,7 @@ out:
 	return ret;
 }
 
-int fpga_mgmt_get_vLED_status(int slot_id, uint16_t *status) 
+int fpga_mgmt_get_vLED_status(int slot_id, uint16_t *status)
 {
 	pci_bar_handle_t led_pci_bar;
 	uint32_t read_data;
@@ -649,7 +652,7 @@ int fpga_mgmt_get_vLED_status(int slot_id, uint16_t *status)
 
 	ret = fpga_pci_attach(slot_id, FPGA_MGMT_PF, MGMT_PF_BAR0, 0, &led_pci_bar);
 	fail_on(ret, out, "fpga_pci_attach failed");
-	
+
 	ret = fpga_pci_peek(led_pci_bar, FPGA_VIRTUAL_LED_REG_OFFSET, &read_data);
 	fail_on(ret, out, "fpga_pci_peek failed");
 
@@ -659,10 +662,10 @@ int fpga_mgmt_get_vLED_status(int slot_id, uint16_t *status)
 	ret = fpga_pci_detach(led_pci_bar);
 	fail_on(ret, out, "fpga_pci_detach failed");
 out:
-	return ret;	
+	return ret;
 }
 
-int fpga_mgmt_set_vDIP(int slot_id, uint16_t value) 
+int fpga_mgmt_set_vDIP(int slot_id, uint16_t value)
 {
 	pci_bar_handle_t dip_pci_bar;
 	uint32_t write_data;
@@ -682,7 +685,7 @@ out:
 	return ret;
 }
 
-int fpga_mgmt_get_vDIP_status(int slot_id, uint16_t *value) 
+int fpga_mgmt_get_vDIP_status(int slot_id, uint16_t *value)
 {
 	pci_bar_handle_t dip_pci_bar;
 	uint32_t read_data;
@@ -695,7 +698,7 @@ int fpga_mgmt_get_vDIP_status(int slot_id, uint16_t *value)
 	fail_on(ret, out, "fpga_pci_peek failed");
 
 	/* All this code assumes little endian, it would need rework for supporting non x86/arm platforms */
-	*value = (uint16_t)read_data; 
+	*value = (uint16_t)read_data;
 
 	ret = fpga_pci_detach(dip_pci_bar);
 	fail_on(ret, out, "fpga_pci_detach failed");

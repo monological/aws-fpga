@@ -1,0 +1,26 @@
+diff --git a/app/pktgen-port-cfg.c b/app/pktgen-port-cfg.c
+index 1e6a78d..de3da8a 100644
+--- a/app/pktgen-port-cfg.c
++++ b/app/pktgen-port-cfg.c
+@@ -278,8 +278,6 @@ pktgen_config_ports(void)
+ 
+         if (pktgen.flags & JUMBO_PKTS_FLAG) {
+             conf.rxmode.max_lro_pkt_size = pktgen.eth_max_pkt;
+-            if (info->dev_info.tx_offload_capa & RTE_ETH_TX_OFFLOAD_MULTI_SEGS)
+-                conf.txmode.offloads |= RTE_ETH_TX_OFFLOAD_MULTI_SEGS;
+         }
+         if (rt.rx > 1) {
+             conf.rx_adv_conf.rss_conf.rss_key = NULL;
+diff --git a/lib/common/pg_compat.h b/lib/common/pg_compat.h
+index 7c43265..4e8aed9 100644
+--- a/lib/common/pg_compat.h
++++ b/lib/common/pg_compat.h
+@@ -21,7 +21,7 @@ extern "C" {
+ 
+ #define __RTE_VERSION RTE_VERSION_NUM(RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR, RTE_VER_RELEASE)
+ 
+-#define PG_JUMBO_ETHER_MTU 9216
++#define PG_JUMBO_ETHER_MTU 9198
+ #define PG_JUMBO_FRAME_LEN (PG_JUMBO_ETHER_MTU + RTE_ETHER_CRC_LEN + RTE_ETHER_HDR_LEN)
+ 
+ #ifdef __cplusplus

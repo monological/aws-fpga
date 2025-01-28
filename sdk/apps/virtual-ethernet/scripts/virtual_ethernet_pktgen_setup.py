@@ -23,6 +23,15 @@ import glob
 import argparse
 import subprocess
 import logging
+import platform
+
+# DPDK make config target
+make_tgt = "x86_64-native-linuxapp-gcc"
+try:
+    if "aarch64" in platform.processor():
+        make_tgt = "arm64-armv8a-linuxapp-gcc"
+except AttributeError:
+    pass
 
 dpdk_devbind = "./usertools/dpdk-devbind.py"
 num_2MB_hugepages = 16384
@@ -30,12 +39,12 @@ num_2MB_hugepages = 16384
 # Logger
 logger = logging.getLogger('logger')
 
-def print_success(dpdk_path):
+def print_success(scripts_path, install_path):
     print("")
     print("DPDK setup complete!")
-    print("A simple loopback test may be run via the following steps:")
-    print("  cd %s" % (dpdk_path))
-    print("  sudo ./build/app/dpdk-testpmd -l 0-1  -- --port-topology=loop --auto-start --tx-first --stats-period=3")
+    print("pktgen-dpdk may be run via the following steps:")
+    print("  cd %s/pktgen-dpdk" % (install_path))
+    print("  sudo ./app/%s/pktgen -l 0,1 -n 4 --proc-type auto --log-level 7 --socket-mem 2048 --file-prefix pg -- -T -P -m [1].0 -f %s/pktgen-ena.pkt" % (make_tgt, scripts_path))
 
 def check_output(args, stderr=None):
     return subprocess.Popen(args, stdout=subprocess.PIPE,
@@ -55,35 +64,21 @@ def load_uio():
     else:
         cmd_exec("modprobe uio_pci_generic")
 
-def fpga_slot_str2dbdf(fpga_slot_str):
-    dbdf = "None"
-    found = False
-    cmd = "fpga-describe-local-image-slots"
-    # Exec the command first to give an error message
-    # if the SDK hasn't been installed.
-    cmd_exec("%s >/dev/null 2>&1" % (cmd))
-    fpga_slots = check_output(cmd).splitlines()
-    for slot_str in fpga_slots:
-        logger.debug("slot_str=%s" % slot_str)
-        _,slot_num,_,_,dbdf = slot_str.split()
-        if slot_num.decode() == fpga_slot_str:
-            found = True
-            break
-    if found == False:
-        logger.error("Could not find fpga_slot_str=%s" % fpga_slot_str)
-    return dbdf.decode()
+def setup_dpdk(install_path, eni_dbdf, eni_ethdev):
+    logger.debug("setup_dpdk: install_path=%s" % (install_path))
 
-def setup_dpdk(dpdk_path, fpga_slot_str, eni_dbdf, eni_ethdev):
-    logger.debug("setup_dpdk: dpdk_path=%s, fpga_slot_str=%s" % (dpdk_path, fpga_slot_str))
-
-    if os.path.exists(dpdk_path) == False:
-        logger.error("dpdk_path=%s does not exist." % (dpdk_path))
-        logger.error("Please specify a dpdk directory that was installed via virtual-ethernet-install.py, exiting")
+    if os.path.exists(install_path) == False:
+        logger.error("install_path=%s does not exist." % (install_path))
+        logger.error("Please specify a directory that was installed via virtual-ethernet-pktgen-install.py, exiting")
         sys.exit(1)
 
-    fpga_dbdf = fpga_slot_str2dbdf(fpga_slot_str)
-    if fpga_dbdf == "None":
-        logger.error("Could not get DBDF for fpga_slot_str=%s" % fpga_slot_str)
+    if eni_dbdf == "None" or eni_ethdev == "None":
+        logger.error("eni_dbdf=%s, eni_ethdev=%s is invalid, exiting" % (eni_dbdf, eni_ethdev))
+        sys.exit(1)
+
+    if eni_ethdev == "eth0":
+        logger.error("Using eni_ethdev=%s for pktgen will disrupt your primary network interface" % (eni_ethdev))
+        logger.error("Please specifiy a different eni_ethdev such as eth1, exiting")
         sys.exit(1)
 
     # Stash away the current working directory
@@ -91,12 +86,12 @@ def setup_dpdk(dpdk_path, fpga_slot_str, eni_dbdf, eni_ethdev):
     scripts_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     logger.debug("scripts directory path is %s" % (scripts_path))
 
-    # cd to the dpdk_path directory
-    os.chdir("%s" % (dpdk_path))
+    # cd to the install_path/dpdk directory
+    os.chdir("%s/dpdk" % (install_path))
 
     if os.path.exists(dpdk_devbind) == False:
         logger.error("dpdk_devbind=%s does not exist." % (dpdk_devbind))
-        logger.error("Please specify a dpdk directory that was installed via virtual-ethernet-install.py, exiting")
+        logger.error("Please specify a directory that was installed via virtual-ethernet-pktgen-install.py, exiting")
         sys.exit(1)
 
     # Mount '/mnt/huge', if needed
@@ -115,33 +110,27 @@ def setup_dpdk(dpdk_path, fpga_slot_str, eni_dbdf, eni_ethdev):
     cmd_exec("rmmod ./build/kernel/linux/igb_uio/igb_uio.ko >/dev/null 2>&1", False)
     cmd_exec("insmod ./build/kernel/linux/igb_uio/igb_uio.ko")
 
-    # Bind the FPGA to to DPDK
-    cmd_exec("%s --bind=igb_uio %s" % (dpdk_devbind, fpga_dbdf))
-
-    # Bind the ENI device to to DPDK (optional)
-    if eni_dbdf != "None" and eni_ethdev != "None":
-        cmd_exec("ip link set %s down" % (eni_ethdev))
-        cmd_exec("%s --bind=igb_uio %s" % (dpdk_devbind, eni_dbdf))
+    # Bind the ENI device to to DPDK
+    cmd_exec("ip link set %s down" % (eni_ethdev))
+    cmd_exec("python3 %s --bind=igb_uio %s" % (dpdk_devbind, eni_dbdf))
 
     # cd back to the original directory
     os.chdir("%s" % (cwd))
 
     # Print a success message
-    print_success(dpdk_path)
+    print_success(scripts_path, install_path)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Sets up DPDK for SPP PMD use.")
-    parser.add_argument('dpdk_path', metavar='DPDK_DIR', type=str,
-        help = "specify the full DPDK directory path")
-    parser.add_argument('fpga_slot', metavar='FPGA_IMAGE_SLOT', type=str,
-        help = "specify the fpga-image-slot.  See fpga-describe-local-image --fpga-image-slot for more info.")
+        description="Sets up DPDK for pktgen-dpdk use.")
+    parser.add_argument('install_path', metavar='INSTALL_DIR', type=str,
+        help = "specify the full installation directory path that was used as an argument to virtual-ethernet-pktgen-install.py")
     parser.add_argument('--eni_dbdf', metavar='ENI_DBDF', type=str, default="None",
-        help = "specify the ENI DBDF. e.g. see lspci output 0000:00:04.0 Ethernet controller: Device 1d0f:ec20")
+        help = "specify the ENI DBDF. e.g. see 'lspci' output '0000:00:04.0' for Ethernet controller device 1d0f:ec20")
     parser.add_argument('--eni_ethdev', metavar='ENI_ETHDEV', type=str, default="None",
-        help = "specify the ENI Ethernet device'. e.g. see ifconfig output for eth1")
+        help = "specify the ENI Ethernet device. e.g. see 'ifconfig' output and the 'eth1' device")
     parser.add_argument('--debug', action='store_true', required=False,
-        help = 'Enable debug messages')
+        help='Enable debug messages')
     args = parser.parse_args()
 
     logging_level = logging.INFO
@@ -159,7 +148,7 @@ def main():
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    setup_dpdk(args.dpdk_path, args.fpga_slot, args.eni_dbdf, args.eni_ethdev)
+    setup_dpdk(args.install_path, args.eni_dbdf, args.eni_ethdev)
 
 if __name__ == '__main__':
     main()

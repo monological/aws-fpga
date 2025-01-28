@@ -10,7 +10,7 @@ developing for AWS EC2 FPGA Instances.
 
     - `Instance Types <#instance-types>`__
     - `2nd Generation On-Cloud FPGA Accelerator
-      Card <#2nd-generation-on-cloud-fpga-accelerator-card>`__
+      Card <#second-generation-on-cloud-fpga-accelerator-card>`__
     - `Comparison to F1 <#comparison-to-f1>`__
 
   - `AWS EC2 F2 FPGA Development
@@ -22,11 +22,6 @@ developing for AWS EC2 FPGA Instances.
     - `Software-Defined Development
       Environment <#software-defined-development-environment>`__
 
-      - `Hardware Emulation <#hardware-emulation>`__
-      - `Host Application and FPGA Binary
-        Builds <#host-application-and-fpga-binary-builds>`__
-      - `AFI Generation <#afi-generation>`__
-
     - `Additional Vitis
       Documentation <#additional-vitis-documentation>`__
     - `FPGA Developer AMI <#fpga-developer-ami>`__
@@ -34,9 +29,10 @@ developing for AWS EC2 FPGA Instances.
   - `Getting Started <#getting-started>`__
 
     - `Getting Familiar with AWS <#getting-familiar-with-aws>`__
-    - `Customer Hardware Development <#customer-hardware-development>`__
 
   - `Next Steps <#next-steps>`__
+
+.. _aws-ec2-f2-instance-overview:
 
 AWS EC2 F2 Instance Overview
 ----------------------------
@@ -61,17 +57,21 @@ branches on the `GitHub repo <https://github.com/aws/aws-fpga>`__
 prefixed with ``f2``. Any branches not prefixed f2 in their name are not
 referred to in this documentation.
 
+.. _instance-types:
+
 Instance Types
 ~~~~~~~~~~~~~~
 
 |f2_instances|
 
-.. _2nd-generation-on-cloud-fpga-accelerator-card:
+.. _second-generation-on-cloud-fpga-accelerator-card:
 
 2nd Generation On-Cloud FPGA Accelerator Card
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 |image1|
+
+.. _comparison-to-f1:
 
 Comparison to F1
 ~~~~~~~~~~~~~~~~
@@ -80,6 +80,8 @@ Comparison to F1
 
 AWS EC2 F2 FPGA Development Kit
 -------------------------------
+
+.. _development-environments-user-guide:
 
 Development Environments
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,9 +102,9 @@ supported in the development kit.
     - Typical Developer
   * - `Hardware accelerator development using Vivado <./hdk/README.html>`__
     - This environment supports the Hardware Development Kit (HDK) design flow,
-      which empowers FPGA developers to create accelerator designs from scratch, 
-      using HDL source code and IPs. The AMD Vivado tool synthesizes, implements, 
-      and generates the Design Check Point (DCP) file used in F2 AFI creation. 
+      which empowers FPGA developers to create accelerator designs from scratch,
+      using HDL source code and IPs. The AMD Vivado tool synthesizes, implements,
+      and generates the Design Check Point (DCP) file used in F2 AFI creation.
       AWS FPGA developers benefit from the suite of scripts supplied in the HDK
       that help to automate different design steps. This allows for flexibility
       in architecting, implementing, and optimizing accelerator designs while
@@ -112,15 +114,15 @@ supported in the development kit.
     - Simulation
     - Hardware developers with advanced FPGA experience
   * - `Hardware accelerator development using Vitis <./vitis/README.html>`__
-    - This environment supports the Vitis design flow, 
+    - This environment supports the Vitis design flow,
       which enables software developers to write C++ code,
-      which may then be compiled into RTL and used in 
-      cycle-accurate hardware simulation. After it may 
-      then be built into an accelerator design. This step 
-      is not necessary, but is encouraged. Vitis may also 
-      be used to implement accelerator designs from scratch, 
-      using HDL and IPs directly, similar to Vivado. Vitis 
-      offers additional analysis tools to aid in the 
+      which may then be compiled into RTL and used in
+      cycle-accurate hardware simulation. After it may
+      then be built into an accelerator design. This step
+      is not necessary, but is encouraged. Vitis may also
+      be used to implement accelerator designs from scratch,
+      using HDL and IPs directly, similar to Vivado. Vitis
+      offers additional analysis tools to aid in the
       refinement of designs.
     - C/C++/Verilog/System Verilog/VHDL
     - XDMA Engine (coming soon)
@@ -132,6 +134,8 @@ On-premise environment: Customers can set up a on-premise development
 environment using 2024.1 AMD tools with their own licenses. Refer to
 this guide `here <./hdk/docs/on_premise_licensing_help.html>`__ for
 licensing requirements.
+
+.. _aws-shells:
 
 AWS Shells
 ~~~~~~~~~~
@@ -167,6 +171,9 @@ table below details the released shell version and its main features.
   * - F2 Small Shell
     - 0x10212415
     - Shell with no built-in DMA engine (40% smaller shell footprint).
+
+
+.. _hardware-development-kit-hdk:
 
 Hardware Development Kit (HDK)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,7 +221,9 @@ Our scripts require a minimum Python version of 3.10, under
   * - Tool
     - Minimum Version
   * - Python
-    - 3.10+ 
+    - 3.10+
+
+.. _software-defined-development-environment:
 
 Software-Defined Development Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,12 +236,13 @@ themselves with the development experience that accelerates cloud
 applications. The optimized compiler, Vitis, allows easy F2 accelerator
 development using C/C++/OpenCL and/or Verilog/VHDL.
 
-The F2 developer kit provides development tools for Vitis hardware
-emulation, example host applications, and FPGA Binary builds, followed
-by AFI generation.
+Currently, the F2 developer kit provides development tools for Vitis hardware
+emulation.
 
 To get started, please see the `README for a hello world accelerator
 example <./vitis/README.html>`__
+
+.. _fpga-developer-ami:
 
 FPGA Developer AMI
 ~~~~~~~~~~~~~~~~~~
@@ -268,8 +278,12 @@ types <https://aws.amazon.com/ec2/instance-types/#General_Purpose>`__.
 Note that the tools used by the HDK are only supported on x86-based EC2
 instances (Graviton-based instances are not compatible with the tools).
 
+.. _getting-started:
+
 Getting Started
 ---------------
+
+.. _getting-familiar-with-aws:
 
 Getting Familiar with AWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -280,6 +294,8 @@ focusing on the basics of the `AWS EC2 <https://aws.amazon.com/ec2/>`__
 and `AWS S3 <https://aws.amazon.com/s3/>`__ services. Understanding the
 fundamentals of these services will further enhance the developer
 experience with AWS F2 instances and the FPGA Developer Kit.
+
+.. _next-steps:
 
 Next Steps
 ----------
@@ -313,5 +329,5 @@ FPGA Development Kit:
   JTAG <./hdk/docs/Virtual_JTAG_XVC.html>`__ to run hardware debug.
 
 .. |f2_instances| image:: ./_static/instance_sizes.png
-.. |image1| image:: ./_static/accel_card_specs.png
+.. |image1| image:: ./_static/accel_card_specs_20250110.png
 .. |f2_f1_comp| image:: ./_static/f2_f1_comp.png

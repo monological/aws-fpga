@@ -1,0 +1,13 @@
+diff --git a/app/pktgen-constants.h b/app/pktgen-constants.h
+index 6e685ab..4f6c63d 100644
+--- a/app/pktgen-constants.h
++++ b/app/pktgen-constants.h
+@@ -20,7 +20,7 @@ enum {
+     DEFAULT_PKT_RX_BURST = 64,  /* Increasing this number consumes memory very fast */
+     DEFAULT_PKT_TX_BURST = 64,  /* Increasing this number consumes memory very fast */
+     DEFAULT_RX_DESC      = (MAX_PKT_RX_BURST * 8),
+-    DEFAULT_TX_DESC      = (MAX_PKT_TX_BURST * 16),
++    DEFAULT_TX_DESC      = (MAX_PKT_TX_BURST * 4),
+ 
+     DEFAULT_MBUFS_PER_PORT_MULTIPLER = 8, /* Multipler for number of mbufs per port */
+     MAX_SPECIAL_MBUFS                = 1024,

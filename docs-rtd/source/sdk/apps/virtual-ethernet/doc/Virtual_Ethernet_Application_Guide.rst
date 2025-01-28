@@ -4,13 +4,14 @@ Virtual Ethernet Application Guide
 Table of Contents:
 ------------------
 
-- `Overview <#Overview>`__
+- `Overview <#overview>`__
 
-- `Example Workflows <#ExampleWorkflows>`__
+- `Example Workflows <#example-workflows>`__
 
-  - `"Hello World" Loopback <#HelloWorldLoopback>`__
+  - `Simple Loopback <#simple-loopback>`__
+  - `PacketGen Dual Instance Loopback <#packetgen-dual-instance-loopback>`__
 
-- `FAQ <#FAQ>`__
+- `FAQ <#faq>`__
 
 Overview
 --------
@@ -36,8 +37,8 @@ example workflows.
 Example Workflows
 -----------------
 
-"Hello World" DPDK testpmd loopback mode, auto-start
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Simple Loopback
+~~~~~~~~~~~~~~~
 
 This example maximizes PPS for 64B packets with a single vCPU using the
 DPDK testpmd application to drive the DPDK SPP PMD and the FPGA SDE IP.
@@ -91,6 +92,172 @@ Please refer to `Q: Where can I find DPDK testpmd feature documentation?`_ for a
 on the supported testpmd features and the link to the full testpmd
 documentation.
 
+PacketGen Dual Instance Loopback
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This example maximizes PPS for 64B packets with a single vCPU using two
+instances to test end-to-end traffic flows.
+
+In the below diagram, the ``red`` line shows the Ethernet frame path
+from the **Packet Generator Instance** into the CL streaming application
+in the **Virtual Ethernet Instance**. The ``blue`` line shows the
+Ethernet frame path from the CL streaming application in the **Virtual
+Ethernet Instance** to the **Packet Generator Instance**. For best
+performance, the **Virtual Ethernet Instance** and the **Packet
+Generator Instance** should be created in the same VPC and placement
+group. Please refer to `Q: Why can't I launch instance type X in a placement group with an F2?`_ if you are unable to launch other instances with the F2 instance. It should also be an instance type
+which supports the Elastic Network Adapter (driver)
+type of Enhanced Networking. Please refer to `Q: What instance types support Enhanced Networking?`_ for more information. This example was tested using an
+``f2.48xlarge`` and an ``m5.2xlarge`` as the **Packet Generator
+Instance**.
+
+.. image:: ./../../../../_static/sdk/apps/virtual-ethernet/Virtual_Ethernet_Pktgen.jpg
+
+- **Virtual Ethernet Instance**
+
+  - This workflow sets up the DPDK testpmd application for port-to-port
+    forwarding through the DPDK ENA PMD, the DPDK SPP PMD and SDE. It
+    then runs testpmd in auto-start mode and displays packet statistics
+    every 3 seconds (including PPS). To exit testpmd, use ``ctrl-c``.
+
+- **Traffic Generator Instance**
+
+  - The Traffic Generator instance uses pktgen-dpdk to send max PPS
+    towards the Virtual Ethernet instance. This example was tested using
+    an ``m5.2xlarge`` and an ``f2.48xlarge``.
+
+- **Network Interface Setup**
+
+  - This example workflow places the PacketGen traffic on ``eth1``, and
+    reserves ``eth0`` for your SSH sessions and other control plane
+    traffic.
+  - An additional network interface can be attached via the EC2 "Attach
+    Network Interface" workflow. Your new ``eth1`` network interface is
+    automatically initialized if you are using Amazon Linux. If you are
+    using Ubuntu, please refer to `Q: How do I setup the additional ENI/eth1 interface for the PacketGen Dual Instance Loopback example?`_.
+    Refer to `Q: How do I retrieve the ENI DBDF for the additional ENI/eth1 interface that is used in the PacketGen Dual Instance Loopback example?`_ to retrieve the ENI ``DBDF`` (e.g. the PCI
+    Domain:Bus:Device.Function) for your new ENI interface.
+
+Virtual Ethernet instance
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Software installation and build phase
+
+::
+
+   cd $(SDK_DIR)/apps/virtual-ethernet/scripts
+   sudo ./virtual_ethernet_install.py <install_dir>
+
+System setup and device bind phase, e.g. on instance boot
+
+::
+
+   sudo fpga-load-local-image -S <fpga-slot> -I <SDE loopback CL AGFI>
+   cd $(SDK_DIR)/apps/virtual-ethernet/scripts
+   sudo ./virtual_ethernet_setup.py <install_dir>/dpdk <fpga-slot> --eni_dbdf <eth1 ENI DBDF> --eni_ethdev <eth1 ENI ethdev>
+
+Testpmd application setup and start phase
+
+::
+
+   cd <install_dir>/dpdk
+   sudo ./build/app/dpdk-testpmd -l 0-1  -- --port-topology=chained --auto-start --stats-period=3 --forward-mode=spp-eni-addr-swap
+
+The ``spp-eni-addr-swap`` testpmd forwarding mode swaps the Ethernet MAC
+and IP addresses so the Packet Generator instance can receive the
+loopback Ethernet frames.
+
+Please refer to `Q: Where can I find DPDK testpmd feature documentation?`_ for a quick reference guide
+on the supported testpmd features and the link to the full testpmd
+documentation.
+
+Packet Generator Instance
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Software installation and build phase
+
+::
+
+   cd $(SDK_DIR)/apps/virtual-ethernet/scripts
+   ./virtual_ethernet_pktgen_install.py <install_dir>
+
+During installation, dpdk, pktgen-dpdk, dpdk-kmods, and numactl are
+cloned, built, and installed in the <install_dir>. The <install_dir>
+will have
+
+::
+
+   dpdk  dpdk-kmods  numactl  pktgen-dpdk
+
+System setup and device bind phase, e.g. on instance boot
+
+::
+
+   cd $(SDK_DIR)/apps/virtual-ethernet/scripts
+   sudo ./virtual_ethernet_pktgen_setup.py <install_dir> --eni_dbdf <eth1 DBDF> --eni_ethdev <eth1 ENI ethdev>
+
+Packet Generator setup and start phase:
+
+A sample Packet Generator ``pktgen-ena.pkt`` script is provided. You
+will need to modify it to work with your F2 instances.
+
+::
+
+   cat $(SDK_DIR)/apps/virtual-ethernet/scripts/pktgen-ena.pkt
+   set 0 dst mac 12:DD:AB:C2:D3:B8  # set this to Virtual Ethernet instance eth1 mac address
+   set 0 src ip 172.31.63.86/24     # set this to the Packet Generator instance eth1 IP address
+   set 0 dst ip 172.31.58.142       # set this to the Virtual Ethernet instance eth1 IP address
+   set 0 sport 54321
+   set 0 dport 51234
+   set 0 type ipv4
+   set 0 proto udp
+   set 0 size 64
+   start 0
+
+Similarly a ``pktgen-ena-range.pkt`` script is provided for multiflow
+run with a range of parameters. This needs to be modified with
+corresponding dest mac address, src and dest ip addresses.
+
+::
+
+   cat $(SDK_DIR)/apps/virtual-ethernet/scripts/pktgen-ena-range.pkt
+   set 0 type ipv4
+   range 0 dst mac start 06:06:5c:8b:30:0d     # set this to Virtual Ethernet instance eth1 mac address
+   range 0 dst mac min 06:06:5c:8b:30:0d       # set this to Virtual Ethernet instance eth1 mac address
+   range 0 dst mac max 06:06:5c:8b:30:0d       # set this to Virtual Ethernet instance eth1 mac address
+   range 0 dst mac inc 00:00:00:00:00:00
+   range 0 src ip start 172.31.60.245          # set this to the Packet Generator instance eth1 IP address
+   range 0 src ip min 172.31.60.245            # set this to the Packet Generator instance eth1 IP address
+   range 0 src ip max 172.31.60.245            # set this to the Packet Generator instance eth1 IP address
+   range 0 src ip inc 0.0.0.0
+   range 0 dst ip start 172.31.59.180          # set this to the Virtual Ethernet instance eth1 IP address
+   range 0 dst ip min 172.31.59.180            # set this to the Virtual Ethernet instance eth1 IP address
+   range 0 dst ip max 172.31.59.180            # set this to the Virtual Ethernet instance eth1 IP address
+   range 0 dst ip inc 0.0.0.0
+   range 0 src port start 1000
+   range 0 src port min 1000
+   range 0 src port max 1020
+   range 0 src port inc 1
+   range 0 dst port start 1000
+   range 0 dst port min 1000
+   range 0 dst port max 1020
+   range 0 dst port inc 1
+   range 0 size start 4096
+   range 0 size min 4096
+   range 0 size max 4096
+   range 0 size inc 1
+   range 0 proto tcp
+   enable 0 range
+   start 0
+
+When running the below command, with -j option, the packet size can be
+set to jumbo frames and try the example run with pkt size 4096
+
+::
+
+   cd <install_dir>/pktgen-dpdk
+   sudo LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu ./build/app/pktgen -l 0,1 -n 16 --proc-type auto --log-level 7 --socket-mem 4096 --file-prefix pg -- -T -j -P -m [1].0 -f $(SDK_DIR)/apps/virtual-ethernet/scripts/pktgen-ena.pkt
+
 FAQ
 ---
 
@@ -119,6 +286,22 @@ sessions. Interactive mode is especially useful when running testpmd
 within the ``gdb`` debugger. Below is a quick reference guide for some
 of the supported testpmd interactive mode commands that may be used with
 the application examples.
+
+Q: Can I map multiple ENIs to a SPP?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `PacketGen Dual Instance Loopback <#packetgen-dual-instance-loopback>`__ example
+uses a one-to-one mapping between SPP and ENI as configured via testpmd.
+Your custom applications(s) may map multiple ENIs to a SPP as long as
+your application follows the DPDK threading model (e.g. ‘lockless’) and
+the CL supports Ethernet frames from multiple ENIs.
+
+Q: Can I map different ENIs to different SPP queues?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The simple `PacketGen Dual Instance Loopback <#packetgen-dual-instance-loopback>`__ example
+uses a one-to-one mapping between SPP and ENI as configured via testpmd.
+Multiple SPP queues are not yet supported.
 
 Q: What performance should I expect?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -261,6 +444,65 @@ Q: What operating systems are supported?
 The Virtual Ethernet application is tested and supported for Linux
 operating systems (Amazon Linux and Ubuntu).
 
+Q: How do I setup the additional ENI/eth1 interface for the PacketGen Dual Instance Loopback example?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An additional network interface can be attached via the EC2 "Attach
+Network Interface" workflow. Your new ``eth1`` network interface is
+automatically initialized if you are using Amazon Linux. If you are
+using Ubuntu, please execute the following steps:
+
+Use the EC2 Console to view the IP Address and Mac Address of the
+additional network interface. The Mac Address ``12:1e:7e:0b:70:2e`` and
+IP Address ``172.1.1.22`` are used for illustration purposes.
+
+Create an ``eth1`` specific configuration using the existing ethernet
+adapter as a template.
+
+::
+
+   sudo vi /ect/netplan/50-cloud-init.yaml
+   eth1:
+         dhcp4: false
+         dhcp6: false
+         addresses:
+         - 172.1.1.22
+         match:
+           macaddress: 12:1e:7e:0b:70:2e
+         set-name: eth1
+
+Initialize the ``eth1`` interface using ``sudo netplan --debug apply``
+and then show the ``eth1`` configuration using ``ifconfig``.
+
+::
+
+   ifup eth1
+   Determining IP information for eth1... done.
+   ifconfig eth1
+   eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 9001
+           inet 172.1.1.22  netmask 255.255.240.0  broadcast 172.1.1.255
+           inet6 fe80::101e:7eff:fe0b:702e  prefixlen 64  scopeid 0x20<link>
+           ether 12:1e:7e:0b:70:2e  txqueuelen 1000  (Ethernet)
+           RX packets 10  bytes 1052 (1.0 KiB)
+           RX errors 0  dropped 0  overruns 0  frame 0
+           TX packets 12  bytes 1416 (1.3 KiB)
+           TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+At this point, the ``eth1`` interface is ready for the setup script(s)
+that are described in the `PacketGen Dual Instance Loopback <#packetgen-dual-instance-loopback>`__ example.
+
+Q: How do I retrieve the ENI DBDF for the additional ENI/eth1 interface that is used in the PacketGen Dual Instance Loopback example?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ENI DBDF for the ``eth1`` interface can be retrieved as follows
+using a grep for ``1d0f:ec20`` through the ``lspci`` command output.
+
+::
+
+   lspci -D | grep "1d0f:ec20"
+   0000:00:03.0 Ethernet controller: Device 1d0f:ec20    # this is eth0
+   0000:00:04.0 Ethernet controller: Device 1d0f:ec20    # this is eth1.  The DBDF is 0000:00:04.0
+
 Q: How do I update DPDK and SPP with the Vendor/Device ID for my CL?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -299,3 +541,28 @@ following table in ``dpdk-devbind.py``.
 You should then run the ``virtual_ethernet_setup.py`` script which will
 re-run the ``dpdk-devbind.py`` script to bind DPDK and SPP to your
 Vendor and Device Id.
+
+Q: What instance types support Enhanced Networking?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+At the time of writing, compatible instance types are all `Nitro-based
+instances <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#instance-hypervisor-type>`__
+and the following Xen-based instances G3, H1, I3, ``m4.16xlarge``, P2,
+P3, P3dn, R4. For more information, see the documentation on `Enhanced
+Networking on
+Linux <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking.html>`__.
+
+Q: Why can't I launch instance type X in a placement group with an F2?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you launch instances in a cluster placement group, AWS attempts to
+launch those instances on hardware which share high capacity networking
+infrastructure. It is not always possible to launch heterogeneous
+instance types within such a group. This depends on the underlying
+arrangement of this physical hardware. If it is not possible to launch
+an instance of the desired type in a placement group with an F2, try
+using another F2 instance as the packet generator instance. For more
+information, see the `documentation on placement
+groups <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-cluster>`__.
+
+.. |alt tag| image:: ../../../../_static/sdk/apps/virtual-ethernet/Virtual_Ethernet_Pktgen.jpg

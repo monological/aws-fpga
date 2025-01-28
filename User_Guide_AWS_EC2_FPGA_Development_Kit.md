@@ -12,14 +12,10 @@ The development kit includes example designs to get you familiar with developing
     - [AWS Shells](#aws-shells)
     - [Hardware Development Kit (HDK)](#hardware-development-kit-hdk)
     - [Software-Defined Development Environment](#software-defined-development-environment)
-      - [Hardware Emulation](#hardware-emulation)
-      - [Host Application and FPGA Binary Builds](#host-application-and-fpga-binary-builds)
-      - [AFI Generation](#afi-generation)
     - [Additional Vitis Documentation](#additional-vitis-documentation)
     - [FPGA Developer AMI](#fpga-developer-ami)
   - [Getting Started](#getting-started)
     - [Getting Familiar with AWS](#getting-familiar-with-aws)
-    - [Customer Hardware Development](#customer-hardware-development)
   - [Next Steps](#next-steps)
 
 ## AWS EC2 F2 Instance Overview
@@ -34,7 +30,7 @@ This documentation is relevant to F2 only. Therefore, it applies to all branches
 
 ### 2nd Generation On-Cloud FPGA Accelerator Card
 
-![f2_instances](./shared/assets/accel_card_specs.png)
+![f2_instances](./shared/assets/accel_card_specs_20250110.png)
 
 ### Comparison to F1
 
@@ -99,7 +95,7 @@ Our scripts require a minimum Python version of 3.10, under `/usr/bin/env python
 
 The software-defined development environment allows customers to compile their C/C++/OpenCL code into AFIs and use C/C++/OpenCL APIs to interface with the accelerator, running on the FPGA. Software developers with little or no FPGA experience will be able to quickly familiarize themselves with the development experience that accelerates cloud applications. The optimized compiler, Vitis, allows easy F2 accelerator development using C/C++/OpenCL and/or Verilog/VHDL.
 
-The F2 developer kit provides development tools for Vitis hardware emulation, example host applications, and FPGA Binary builds, followed by AFI generation.
+Currently, the F2 developer kit provides development tools for Vitis hardware emulation.
 
 To get started, please see the [README for a hello world accelerator example](./vitis/README.md)
 

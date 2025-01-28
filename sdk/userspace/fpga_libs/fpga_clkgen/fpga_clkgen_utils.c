@@ -13,9 +13,10 @@
  * permissions and limitations under the License.
  */
 
-#include "utils/log.h"
-#include "fpga_clkgen.h"
 #include "fpga_clkgen_mmcm.h"
+#include <utils/lcd.h>
+#include <utils/log.h>
+#include <fpga_clkgen.h>
 
 //
 // Frequency Table with multiplier and divider values for MMCM, sorted as per increasing frequency order.
@@ -136,6 +137,15 @@ static int aws_clkgen_get_freq(enum fpga_clkgen_mmcm_group group, double* cfg_fr
     uint32_t mult_frac = 0;
     uint32_t div = 0;
 
+    bool any_clocks_available;
+    rc = mmcm_clk_avail_any(group, &any_clocks_available);
+    fail_on(rc, out, "ERROR: Failed to mmcm_clk_avail_any");
+
+    if (!any_clocks_available) {
+      log_debug("No clocks available");
+      goto out;
+    }
+
     rc = mmcm_get_shared_clock(group, &mult, &mult_frac, &div);
     fail_on(rc, out, "ERROR: Failed to mmcm_get_shared_clock");
 
@@ -165,27 +175,43 @@ static int aws_clkgen_set_mmcm(enum fpga_clkgen_mmcm_group group, const struct c
     int rc = 0;
     fail_on_with_code(recipe == NULL, out, rc, FPGA_ERR_SOFTWARE_PROBLEM, "recipe invalid pointer");
 
+    bool any_clocks_available;
+    rc = mmcm_clk_avail_any(group, &any_clocks_available);
+    fail_on(rc, out, "ERROR: Failed to mmcm_clk_avail_any");
+
+    if (!any_clocks_available) {
+      log_debug("No clocks available");
+      goto out;
+    }
+
     uint32_t divs[] = {recipe->div0, recipe->div1, recipe->div2};
     uint32_t div_fracs[] = {recipe->div0_frac, 0, 0};
     const int div_size = sizeof(divs)/sizeof(uint32_t);
 
     if (!reset) {
-      mmcm_set_shared_clock(group, recipe->mult, recipe->mult_frac, recipe->div);
+      rc = mmcm_set_shared_clock(group, recipe->mult, recipe->mult_frac, recipe->div);
       fail_on(rc, out, "ERROR: Failed to mmcm_set_shared_clock");
 
+      bool clock_available = false;
+
       for (int i = 0; i < div_size; ++i) {
-        mmcm_set_clk_div(group, i, divs[i], div_fracs[i]);
-        fail_on(rc, out, "ERROR: Failed to mmcm_set_clk_div");
+        rc = mmcm_clk_avail(group, i, &clock_available);
+        fail_on(rc, out, "ERROR: Failed to mmcm_clk_avail");
+
+        if (clock_available) {
+          rc = mmcm_set_clk_div(group, i, divs[i], div_fracs[i]);
+          fail_on(rc, out, "ERROR: Failed to mmcm_set_clk_div");
+        }
       }
     }
 
-    mmcm_wait_for_locked(group);
+    rc = mmcm_wait_for_locked(group);
     fail_on(rc, out, "ERROR: Failed to mmcm_wait_for_locked");
 
-    mmcm_load_cfg(group, reset);
+    rc = mmcm_load_cfg(group, reset);
     fail_on(rc, out, "ERROR: Failed to mmcm_load_cfg");
 
-    mmcm_wait_for_locked(group);
+    rc = mmcm_wait_for_locked(group);
     fail_on(rc, out, "ERROR: Failed to mmcm_wait_for_locked");
 
  out:
@@ -239,11 +265,20 @@ static int aws_clkgen_reset(pci_bar_handle_t pci_bar_handle, uint32_t reset) {
       int loop_count = 0;
       uint64_t lock_reg_offset = AWS_CLKGEN_LOCK_REG;
       uint32_t lock_reg_value = 0;
-      do {
+      uint32_t lock_mask = 0;
+      rc = mmcm_get_expected_lock_mask(&lock_mask);
+
+      while (loop_count < MAX_CLKGEN_LOOP_RETRIES) {
         rc = fpga_pci_peek(pci_bar_handle, lock_reg_offset, &lock_reg_value);
         fail_on(rc, out, "Failed to read from register @0x%08lx", lock_reg_offset);
-        loop_count++;
-      } while ((lock_reg_value != AWS_CLKGEN_LOCK) && (loop_count < MAX_CLKGEN_LOOP_RETRIES));
+
+        if ((lock_reg_value & lock_mask) == lock_mask) {
+          break;
+        }
+
+        msleep(AWS_CLKGEN_LOOP_DELAY_MS);
+        ++loop_count;
+      }
 
       fail_on((loop_count >= MAX_CLKGEN_LOOP_RETRIES), out, "Timeout: Failed to achieve MMCM lock after %d iterations.", loop_count);
     }
@@ -295,7 +330,7 @@ int aws_clkgen_get_dynamic(int slot_id, struct fpga_clkgen_info* info) {
     rc = fpga_pci_attach(slot_id, AWS_CLKGEN_PF, AWS_CLKGEN_BAR, fpga_attach_flags, &pci_bar_handle);
     fail_on(rc, out, "Unable to attach to the AFI on slot id %d", fpga_attach_flags);
 
-    aws_clkgen_mmcm_init(pci_bar_handle);
+    rc = aws_clkgen_mmcm_init(pci_bar_handle);
     fail_on(rc, out, "ERROR: Failed to aws_clkgen_mmcm_init\n");
 
     rc = aws_clkgen_check_id(pci_bar_handle);
@@ -339,7 +374,7 @@ int aws_clkgen_set_recipe(int slot_id, uint32_t recipe_a, uint32_t recipe_b, uin
     rc = fpga_pci_attach(slot_id, AWS_CLKGEN_PF, AWS_CLKGEN_BAR, fpga_attach_flags, &pci_bar_handle);
     fail_on(rc, out, "Unable to attach to the AFI on slot id %d", fpga_attach_flags);
 
-    aws_clkgen_mmcm_init(pci_bar_handle);
+    rc = aws_clkgen_mmcm_init(pci_bar_handle);
     fail_on(rc, out, "ERROR: Failed to aws_clkgen_mmcm_init\n");
 
     rc = aws_clkgen_check_id(pci_bar_handle);
@@ -389,7 +424,7 @@ int aws_clkgen_set_dynamic(int slot_id, uint32_t clk_a_freq, uint32_t clk_b_freq
     rc = fpga_pci_attach(slot_id, AWS_CLKGEN_PF, AWS_CLKGEN_BAR, fpga_attach_flags, &pci_bar_handle);
     fail_on(rc, out, "Unable to attach to the AFI on slot id %d", fpga_attach_flags);
 
-    aws_clkgen_mmcm_init(pci_bar_handle);
+    rc = aws_clkgen_mmcm_init(pci_bar_handle);
     fail_on(rc, out, "ERROR: Failed to aws_clkgen_mmcm_init\n");
 
     rc = aws_clkgen_check_id(pci_bar_handle);

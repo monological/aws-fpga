@@ -66,3 +66,36 @@ set_property PARENT pblock_CL [get_pblocks pblock_CL_bot]
 #set_clock_groups -name TIG_SRAI_3 -asynchronous -group [get_clocks -of_objects [get_pins static_sh/SH_DEBUG_BRIDGE/inst/bsip/inst/USE_SOFTBSCAN.U_TAP_TCKBUFG/O]] -group [get_clocks -of_objects [get_pins static_sh/pcie_inst/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 
 
+
+
+
+
+
+
+
+#create_pblock pblock_CL_mid_left
+#resize_pblock [get_pblocks pblock_CL_mid_left] -add {CLOCKREGION_X0Y5:CLOCKREGION_X1Y9}
+#set_property PARENT pblock_CL_mid [get_pblocks pblock_CL_mid_left]
+
+
+#set_property EXCLUDE_PLACEMENT 1 [get_pblocks {pblock_CL_top}]
+#add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/ed25519_sigverify_1_inst/SLR*}]
+
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sha512_pre_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/pad_th_inst*}]
+
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sha_f_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sha512_modq_meta_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sha_th_inst*}]
+
+add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv0_f_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/ed25519_sigverify_0_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv0_th_inst*}]
+
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv1_f_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/ed25519_sigverify_1_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv1_th_inst*}]
+
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv2_i_pipe_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/sv2_f_inst*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -hierarchical -filter {NAME =~ WRAPPER_INST/CL/top_inst/ed25519_sigverify_2_inst*}]

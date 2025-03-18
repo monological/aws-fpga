@@ -34,6 +34,8 @@ source $HDK_SHELL_DIR/build/scripts/aws_gen_clk_constraints.tcl
 
 #Convenience to set the root of the RTL directory
 set ENC_SRC_DIR $CL_DIR/build/src_post_encryption
+set TARGET_DIR $CL_DIR/build/src_post_encryption
+set UNUSED_TEMPLATES_DIR $HDK_SHELL_DESIGN_DIR/interfaces
 
 puts "AWS FPGA: ([clock format [clock seconds] -format %T]) Reading developer's Custom Logic files post encryption.";
 
@@ -61,6 +63,48 @@ read_verilog -sv [ list \
   $HDK_SHELL_DESIGN_DIR/sh_ddr/synth/sh_ddr.sv \
   $HDK_SHELL_DESIGN_DIR/interfaces/cl_ports.vh 
 ]
+
+file copy -force $UNUSED_TEMPLATES_DIR/unused_sh_bar1_template.inc        $CL_DIR/design
+file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc            $CL_DIR/design
+file copy -force $UNUSED_TEMPLATES_DIR/unused_cl_sda_template.inc         $CL_DIR/design
+file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc      $CL_DIR/design
+
+#read_verilog -sv $CL_DIR/design/cl_dram_dma.sv
+# read_verilog -sv $CL_DIR/design/cl_hello_world_defines.vh
+# read_verilog -sv $CL_DIR/design/cl_id_defines.vh
+
+#read_verilog -sv $CL_DIR/design/areset_sync.sv
+#read_verilog -sv $CL_DIR/design/simple_dual_port_ram.sv
+#read_verilog -sv $CL_DIR/design/showahead_fifo.sv
+#read_verilog -sv $CL_DIR/design/dual_clock_showahead_fifo.sv
+#read_verilog -sv $CL_DIR/design/wd_pkg.sv
+#read_verilog -sv $CL_DIR/design/pcie_inorder.sv
+#read_verilog -sv $CL_DIR/design/pcie_tr_ext.sv
+#read_verilog -sv $CL_DIR/design/tid_inorder.sv
+#read_verilog -sv $CL_DIR/design/key_store.sv
+#read_verilog -sv $CL_DIR/design/dma_result.sv
+#read_verilog -sv $CL_DIR/design/sha512_pre.sv
+#read_verilog -sv $CL_DIR/design/sha512_sch.sv
+#read_verilog -sv $CL_DIR/design/sha512_msgseq.sv
+#read_verilog -sv $CL_DIR/design/sha512_round.sv
+#read_verilog -sv $CL_DIR/design/sha512_block.sv
+#read_verilog -sv $CL_DIR/design/sha512_modq.sv
+#read_verilog -sv $CL_DIR/design/sha512_modq_meta.sv
+#read_verilog -sv $CL_DIR/design/mul_wide.sv
+#read_verilog -sv $CL_DIR/design/schl_cpu_instr_rom.sv
+#read_verilog -sv $CL_DIR/design/schl_cpu.sv
+#read_verilog -sv $CL_DIR/design/ed25519_add_modp.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sub_modp.sv
+#read_verilog -sv $CL_DIR/design/ed25519_mul_modp.sv
+#read_verilog -sv $CL_DIR/design/ed25519_point_add.sv
+#read_verilog -sv $CL_DIR/design/ed25519_point_dbl.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sigverify_dsdp_mul.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sigverify_ecc.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sigverify_0.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sigverify_1.sv
+#read_verilog -sv $CL_DIR/design/ed25519_sigverify_2.sv
+#read_verilog -sv $CL_DIR/design/top_f1.sv
+
 
 puts "AWS FPGA: Reading IP blocks";
 
@@ -116,13 +160,16 @@ puts "AWS FPGA: ([clock format [clock seconds] -format %T]) Start design synthes
 
 update_compile_order -fileset sources_1
 puts "\nRunning synth_design for $CL_MODULE $CL_DIR/build/scripts \[[clock format [clock seconds] -format {%a %b %d %H:%M:%S %Y}]\]"
-eval [concat synth_design -top $CL_MODULE -verilog_define XSDB_SLV_DIS $VDEFINES -part [DEVICE_TYPE] -mode out_of_context $synth_options -directive $synth_directive]
+# eval [concat synth_design -include_dirs "{$CL_DIR/design}" -top $CL_MODULE -verilog_define XSDB_SLV_DIS $VDEFINES -part [DEVICE_TYPE] -mode out_of_context $synth_options -directive $synth_directive -strategy strategy]
+eval [concat synth_design -verilog_define PATH_TO_INSTR_ROM_MIF=\"$CL_DIR/design/schl_cpu_instr_rom.mif\" -include_dirs "{$CL_DIR/design}" -top $CL_MODULE -verilog_define XSDB_SLV_DIS $VDEFINES -part [DEVICE_TYPE] -mode out_of_context $synth_options -directive $synth_directive]
 
 set failval [catch {exec grep "FAIL" failfast.csv}]
 if { $failval==0 } {
 	puts "AWS FPGA: FATAL ERROR--Resource utilization error; check failfast.csv for details"
 	exit 1
 }
+
+#read_xdc $CL_DIR/build/constraints/cl_pnr_user.xdc
 
 puts "AWS FPGA: ([clock format [clock seconds] -format %T]) writing post synth checkpoint.";
 write_checkpoint -force $CL_DIR/build/checkpoints/${timestamp}.CL.post_synth.dcp

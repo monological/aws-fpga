@@ -1,0 +1,115 @@
+# =============================================================================
+# Amazon FPGA Hardware Development Kit
+#
+# Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Amazon Software License (the "License"). You may not use
+# this file except in compliance with the License. A copy of the License is
+# located at
+#
+#    http://aws.amazon.com/asl/
+#
+# or in the "license" file accompanying this file. This file is distributed on
+# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or
+# implied. See the License for the specific language governing permissions and
+# limitations under the License.
+# =============================================================================
+
+
+# TODO:
+# Add check if CL_DIR and HDK_SHELL_DIR directories exist
+# Add check if /build and /build/src_port_encryption directories exist
+# Add check if the vivado_keyfile exist
+
+set TARGET_DIR $scripts_dir/../src_post_encryption
+set UNUSED_TEMPLATES_DIR $HDK_SHELL_DESIGN_DIR/interfaces
+
+
+# Remove any previously encrypted files, that may no longer be used
+if {[llength [glob -nocomplain -dir $TARGET_DIR *]] != 0} {
+  eval file delete -force [glob $TARGET_DIR/*]
+}
+
+#---- Developr would replace this section with design files ----
+
+file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc       $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_ddr_template.inc       $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_cl_sda_template.inc    $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc $TARGET_DIR
+
+## Change file names and paths below to reflect your CL area.  DO NOT include AWS RTL files.
+file copy -force $CL_DIR/design/cl_wiredancer.sv                       $TARGET_DIR
+file copy -force $CL_DIR/design/cl_dram_dma_defines.vh                   $TARGET_DIR
+file copy -force $CL_DIR/design/cl_id_defines.vh                         $TARGET_DIR
+file copy -force $CL_DIR/design/cl_dram_dma_pkg.sv                       $TARGET_DIR
+file copy -force $CL_DIR/design/cl_tst.sv                                $TARGET_DIR
+file copy -force $CL_DIR/design/cl_int_tst.sv                            $TARGET_DIR
+file copy -force $CL_DIR/design/mem_scrb.sv                              $TARGET_DIR
+file copy -force $CL_DIR/design/cl_tst_scrb.sv                           $TARGET_DIR
+file copy -force $CL_DIR/design/axil_slave.sv                            $TARGET_DIR
+file copy -force $CL_DIR/design/cl_int_slv.sv                            $TARGET_DIR
+file copy -force $CL_DIR/design/cl_pcim_mstr.sv                          $TARGET_DIR
+file copy -force $CL_DIR/design/cl_vio.sv                                $TARGET_DIR
+file copy -force $CL_DIR/design/cl_dma_pcis_slv.sv                       $TARGET_DIR
+file copy -force $CL_DIR/design/cl_ila.sv                                $TARGET_DIR
+file copy -force $CL_DIR/design/cl_ocl_slv.sv                            $TARGET_DIR
+file copy -force $CL_DIR/design/cl_sda_slv.sv                            $TARGET_DIR
+file copy -force $CL_DIR/design/cl_dram_dma_axi_mstr.sv                  $TARGET_DIR
+file copy -force $CL_DIR/design/cl_hbm_axi4.sv                           $TARGET_DIR
+file copy -force $CL_DIR/design/cl_hbm_wrapper.sv                        $TARGET_DIR
+
+# wiredancer files
+file copy -force $CL_DIR/design/areset_sync.sv                     $TARGET_DIR
+file copy -force $CL_DIR/design/dual_clock_showahead_fifo.sv       $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_add_modp.sv                $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_mul_modp.sv                $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_point_add.sv               $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_point_dbl.sv               $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sigverify_0.sv             $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sigverify_1.sv             $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sigverify_2.sv             $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sigverify_dsdp_mul.sv      $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sigverify_ecc.sv           $TARGET_DIR
+file copy -force $CL_DIR/design/ed25519_sub_modp.sv                $TARGET_DIR
+file copy -force $CL_DIR/design/key_store.sv                       $TARGET_DIR
+file copy -force $CL_DIR/design/mul_const_ED25519_L0_133.svh       $TARGET_DIR
+file copy -force $CL_DIR/design/mul_const_ED25519_L0_260.svh       $TARGET_DIR
+file copy -force $CL_DIR/design/mul_const_ED25519_L0_6.svh         $TARGET_DIR
+file copy -force $CL_DIR/design/mul_wide.sv                        $TARGET_DIR
+file copy -force $CL_DIR/design/mul_wide_17nx26_dsp48e2.svh        $TARGET_DIR
+file copy -force $CL_DIR/design/pcie_inorder.sv                    $TARGET_DIR
+file copy -force $CL_DIR/design/pcie_tr_ext.sv                     $TARGET_DIR
+file copy -force $CL_DIR/design/schl_cpu_instr_rom.sv              $TARGET_DIR
+file copy -force $CL_DIR/design/schl_cpu.sv                        $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_block.sv                    $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_modq.sv                     $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_modq_meta.sv                $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_msgseq.sv                   $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_pre.sv                      $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_round.sv                    $TARGET_DIR
+file copy -force $CL_DIR/design/sha512_sch.sv                      $TARGET_DIR
+file copy -force $CL_DIR/design/showahead_fifo.sv                  $TARGET_DIR
+file copy -force $CL_DIR/design/simple_dual_port_ram.sv            $TARGET_DIR
+file copy -force $CL_DIR/design/tid_inorder.sv                     $TARGET_DIR
+file copy -force $CL_DIR/design/wd_pkg.sv                          $TARGET_DIR
+file copy -force $CL_DIR/design/dma_result.sv                      $TARGET_DIR
+file copy -force $CL_DIR/design/top_f2.sv                          $TARGET_DIR
+
+#---- End of section replaced by Developr ---
+
+
+
+# Make sure files have write permissions for the encryption
+
+exec chmod +w {*}[glob $TARGET_DIR/*]
+
+set TOOL_VERSION $::env(VIVADO_TOOL_VERSION)
+set vivado_version [string range [version -short] 0 5]
+puts "AWS FPGA: VIVADO_TOOL_VERSION $TOOL_VERSION"
+puts "vivado_version $vivado_version"
+
+# encrypt .v/.sv/.vh/inc as verilog files
+encrypt -k $HDK_SHELL_DIR/build/scripts/vivado_keyfile.txt -lang verilog  [glob -nocomplain -- $TARGET_DIR/*.{v,sv,vh,inc}]
+
+# encrypt *vhdl files
+encrypt -k $HDK_SHELL_DIR/build/scripts/vivado_vhdl_keyfile.txt -lang vhdl -quiet [ glob -nocomplain -- $TARGET_DIR/*.vhd? ]

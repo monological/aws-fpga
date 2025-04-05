@@ -318,7 +318,7 @@ showahead_fifo #(
     .rd_empty  (),
     .rd_not_empty(st_addr_v),
     .rd_count  (),
-    .rd_data   ({st_addr})
+    .rd_data   (st_addr)
 );
 
 // FIFO that holds the W data+strobe

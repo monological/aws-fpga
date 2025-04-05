@@ -364,16 +364,6 @@ logic [63:0] dma_push_a;   // addresses
 logic [63:0] dma_push_b;   // strobe, or user-coded
 logic [255:0] dma_push_d;  // 256-bit data chunk
 
-// The snippet references them as well:
-assign dma_r = (~dma_full_a) & (~dma_full_d);
-
-// Simple assignment for demonstration
-// (In a real design you'd set dma_push=1 when you have data, etc.)
-assign dma_push = 1'b0;
-assign dma_push_a = 64'h0;
-assign dma_push_b = 64'h0;
-assign dma_push_d = 256'h0;
-
 // PCIM Master signals
 assign cl_sh_pcim_awid   = 4'b0;
 assign cl_sh_pcim_awlen  = 8'b0;

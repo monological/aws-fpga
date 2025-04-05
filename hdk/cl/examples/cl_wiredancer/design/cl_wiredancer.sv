@@ -326,23 +326,25 @@ showahead_fifo #(
 logic        st_data_v;
 logic [255:0] st_data;
 logic [31:0]  st_data_strb;
+logic         st_data_fifo_wr_full;
+logic [5:0]   st_data_fifo_rd_count;
 
 showahead_fifo #(
-    .WIDTH($bits({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[31], sh_cl_dma_pcis_wstrb[0]})),
+    .WIDTH(288),
     .DEPTH(32)
 ) st_in_data_fifo_inst (
-    .aclr      (rst),
-    .wr_clk    (clk),
-    .wr_req    (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
-    .wr_full   (),
-    .wr_data   ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[31], sh_cl_dma_pcis_wstrb[0]}),
+    .aclr        (rst),
+    .wr_clk      (clk),
+    .wr_req      (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
+    .wr_full     (st_data_fifo_wr_full),
+    .wr_data     ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb}),
 
-    .rd_clk    (clk),
-    .rd_req    (st_p),
-    .rd_empty  (),
+    .rd_clk      (clk),
+    .rd_req      (st_p),
+    .rd_empty    (),  // optional dummy if unused
     .rd_not_empty(st_data_v),
-    .rd_count  (),
-    .rd_data   ({st_data, st_data_strb[31], st_data_strb[0]})
+    .rd_count    (st_data_fifo_rd_count),
+    .rd_data     ({st_data, st_data_strb})
 );
 
 assign st_p = st_addr_v & st_data_v;

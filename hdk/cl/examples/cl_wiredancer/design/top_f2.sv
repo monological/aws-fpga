@@ -104,9 +104,11 @@ logic [4-1:0][36-1:0]                   ths = {
     TH_PRE
 };
 
+localparam int PCIE_L_WIDTH = $clog2(1024) + 1;
+
 logic [1-1:0]                           pcie_iv     [N_PCIE-1:0];
 logic [1-1:0]                           pcie_if     [N_PCIE-1:0];
-logic [16-1:0]                          pcie_il     [N_PCIE-1:0];
+logic [PCIE_L_WIDTH-1:0]                pcie_il [N_PCIE-1:0];
 logic [512-1:0]                         pcie_id     [N_PCIE-1:0];
 
 logic [N_PCIE-1:0][1-1:0]               ext_r;
@@ -241,8 +243,8 @@ always_ff@(posedge clk) begin
         8'h12: avmm_readdata            <= timestamp[32+:32];
 
         8'h20: avmm_readdata            <= cnt_s[w_i];
-        8'h21: avmm_readdata            <= {tr_pending[0+:10], res_o_c[0][0+:10], pcie_il[0][0+:12]};
-        8'h22: avmm_readdata            <= {tr_pending[0+:10], res_o_c[1][0+:10], pcie_il[1][0+:12]};
+        8'h21: avmm_readdata            <= {tr_pending[0+:10], res_o_c[0][0+:10], pcie_il[0]};
+        8'h22: avmm_readdata            <= {tr_pending[0+:10], res_o_c[1][0+:10], pcie_il[1]};
     endcase
 
     if (avmm_write) begin

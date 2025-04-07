@@ -46,6 +46,18 @@ module cl_wiredancer
 
   assign cl_sh_pcim_awuser  = 'b0;
   assign cl_sh_pcim_aruser  = 'b0;
+  // The design never issues reads so tie off the entire AR channel
+  assign cl_sh_pcim_arid    = 16'b0;
+  assign cl_sh_pcim_araddr  = 64'b0;
+  assign cl_sh_pcim_arlen   = 8'b0;
+  assign cl_sh_pcim_arsize  = 3'b0;
+  assign cl_sh_pcim_arburst = 2'b0;
+  assign cl_sh_pcim_arcache = 4'b0;
+  assign cl_sh_pcim_arlock  = 1'b0;
+  assign cl_sh_pcim_arprot  = 3'b0;
+  assign cl_sh_pcim_arqos   = 4'b0;
+  assign cl_sh_pcim_arvalid = 1'b0;
+  assign cl_sh_pcim_rready  = 1'b0;
 
   assign cl_sh_status0      = 'b0;
   assign cl_sh_status1      = 'b0;
@@ -58,39 +70,6 @@ module cl_wiredancer
   logic ddr_ready, hbm_ready;
   assign ddr_ready = (EN_DDR) ? 1'b1 : 1'b0;
   assign hbm_ready = (EN_HBM) ? 1'b1 : 1'b0;
-
-//=============================================================================
-// SDA
-//=============================================================================
-
-  // Cause Protocol Violations
-  always_comb begin
-    cl_sda_bresp   = 'b0;
-    cl_sda_rresp   = 'b0;
-    cl_sda_rvalid  = 'b0;
-  end
-
-  // Remaining CL Output Ports
-  always_comb begin
-    cl_sda_awready = 'b0;
-    cl_sda_wready  = 'b0;
-
-    cl_sda_bvalid = 'b0;
-
-    cl_sda_arready = 'b0;
-
-    cl_sda_rdata   = 'b0;
-  end
-
-//=============================================================================
-// DDR
-//=============================================================================
-
-always_comb begin
-    cl_sh_ddr_stat_ack   = 'b0;
-    cl_sh_ddr_stat_rdata = 'b0;
-    cl_sh_ddr_stat_int   = 'b0;
-  end
 
 ///////////////////////////////////////////////////////////////////////
 // Clock and Reset synchronizers
@@ -391,6 +370,12 @@ logic [255:0] pcim_wdata_half;
 assign cl_sh_pcim_awid    = 4'b0000;
 assign cl_sh_pcim_awlen   = 8'b0;
 assign cl_sh_pcim_awsize  = 3'b110;
+assign cl_sh_pcim_awburst = 2'b01;   // Incrementing burst
+assign cl_sh_pcim_awcache = 4'b0;
+assign cl_sh_pcim_awlock  = 1'b0;
+assign cl_sh_pcim_awprot  = 3'b0;
+assign cl_sh_pcim_awqos   = 4'b0;
+assign cl_sh_pcim_wid     = 16'b0;
 assign cl_sh_pcim_wlast   = 1'b1;
 assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
 assign cl_sh_pcim_wdata   = {2{pcim_wdata_half}};  // Duplicate 256b to 512b

@@ -303,6 +303,8 @@ end
 logic st_addr_v;
 wire st_p;
 logic [63:0] st_addr;
+logic st_v;
+assign st_v = st_addr_v & st_data_v;
 showahead_fifo #(
     .WIDTH(64),
     .DEPTH(32)
@@ -443,9 +445,9 @@ showahead_fifo #(
     .priv_bytes        (vdip_bytes),
 
     // PCIE bridging (input side)
-    .pcie_v            (/* your signals here, or st_v if you prefer */ ),
-    .pcie_a            (/* st_addr if you prefer */ ),
-    .pcie_d            (/* st_data if you prefer */ ),
+    .pcie_v(st_v),
+    .pcie_a(st_addr),
+    .pcie_d(st_data),
 
     // Example DMA push
     .dma_r             (dma_r),

@@ -71,6 +71,18 @@ logic [1-1:0] RSTP;
 //             : connect this function to the design.  All inputs
 //             : and outputs must be connected.
 
+// Don't leave any of the inputs floating
+assign RSTA           = 1'b0;
+assign RSTB           = 1'b0;
+assign RSTM           = 1'b0;
+assign RSTCTRL        = 1'b0;
+assign RSTC           = 1'b0;
+assign RSTD           = 1'b0;
+assign RSTALLCARRYIN  = 1'b0;
+assign RSTALUMODE     = 1'b0;
+assign RSTINMODE      = 1'b0;
+assign RSTP           = 1'b0;
+
 //  <-----Cut code below this line---->
 
    // DSP48E2: 48-bit Multi-Functional Arithmetic Block

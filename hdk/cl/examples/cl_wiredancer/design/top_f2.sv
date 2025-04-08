@@ -39,9 +39,7 @@ module top_f2 #(
     TH_SV2                                              = {12'h0, 12'd200, 12'd200},
 
     DBG_WIDTH = 1024,
-    NO_DDR = 4,
-    DMA_N = 2,
-    DDR_BUFF_W = 20
+    DMA_N = 2
 ) (
 
     input wire [1-1:0]                                  avmm_read,
@@ -64,19 +62,6 @@ module top_f2 #(
     output logic [64-1:0]                               dma_b,
     input wire [1-1:0]                                  dma_f,
     output logic [256-1:0]                              dma_d,
-
-    output logic [NO_DDR-1:0][1-1:0]                    ddr_rd_en,
-    input wire   [NO_DDR-1:0][1-1:0]                    ddr_rd_pop,
-    output logic [NO_DDR-1:0][64-1:0]                   ddr_rd_addr,
-    output logic [NO_DDR-1:0][9-1:0]                    ddr_rd_sz,
-    input wire   [NO_DDR-1:0][1-1:0]                    ddr_rd_v,
-    input wire   [NO_DDR-1:0][512-1:0]                  ddr_rd_data,
-
-    output logic [NO_DDR-1:0][1-1:0]                    ddr_wr_en,
-    input wire   [NO_DDR-1:0][1-1:0]                    ddr_wr_pop,
-    input wire   [NO_DDR-1:0][1-1:0]                    ddr_wr_res,
-    output logic [NO_DDR-1:0][64-1:0]                   ddr_wr_addr,
-    output wire  [NO_DDR-1:0][512-1:0]                  ddr_wr_data,
 
     output logic [DBG_WIDTH-1:0]                        dbg_wire,
 

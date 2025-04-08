@@ -55,8 +55,6 @@ file copy -force $CL_DIR/design/cl_ila.sv                                $TARGET
 file copy -force $CL_DIR/design/cl_ocl_slv.sv                            $TARGET_DIR
 file copy -force $CL_DIR/design/cl_sda_slv.sv                            $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma_axi_mstr.sv                  $TARGET_DIR
-file copy -force $CL_DIR/design/cl_hbm_axi4.sv                           $TARGET_DIR
-file copy -force $CL_DIR/design/cl_hbm_wrapper.sv                        $TARGET_DIR
 
 # wiredancer files
 file copy -force $CL_DIR/design/areset_sync.sv                     $TARGET_DIR

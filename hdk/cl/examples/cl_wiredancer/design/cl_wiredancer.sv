@@ -60,39 +60,6 @@ module cl_wiredancer
   assign ddr_ready = (EN_DDR) ? 1'b1 : 1'b0;
   assign hbm_ready = (EN_HBM) ? 1'b1 : 1'b0;
 
-//=============================================================================
-// SDA
-//=============================================================================
-
-  // Cause Protocol Violations
-  always_comb begin
-    cl_sda_bresp   = 'b0;
-    cl_sda_rresp   = 'b0;
-    cl_sda_rvalid  = 'b0;
-  end
-
-  // Remaining CL Output Ports
-  always_comb begin
-    cl_sda_awready = 'b0;
-    cl_sda_wready  = 'b0;
-
-    cl_sda_bvalid = 'b0;
-
-    cl_sda_arready = 'b0;
-
-    cl_sda_rdata   = 'b0;
-  end
-
-//=============================================================================
-// DDR
-//=============================================================================
-
-always_comb begin
-    cl_sh_ddr_stat_ack   = 'b0;
-    cl_sh_ddr_stat_rdata = 'b0;
-    cl_sh_ddr_stat_int   = 'b0;
-  end
-
 ///////////////////////////////////////////////////////////////////////
 // Clock and Reset synchronizers
 ///////////////////////////////////////////////////////////////////////

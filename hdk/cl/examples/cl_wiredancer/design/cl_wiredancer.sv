@@ -436,4 +436,25 @@ showahead_fifo #(
 );
 
 
+cl_ila
+  #(
+    .DDR_A_PRESENT          (`DDR_A_PRESENT           )
+  )
+  CL_ILA
+  (
+    .aclk                   (clk_main_a0              ),
+    .drck                   (drck                     ),
+    .shift                  (shift                    ),
+    .tdi                    (tdi                      ),
+    .update                 (update                   ),
+    .sel                    (sel                      ),
+    .tdo                    (tdo                      ),
+    .tms                    (tms                      ),
+    .tck                    (tck                      ),
+    .runtest                (runtest                  ),
+    .reset                  (reset                    ),
+    .capture                (capture                  ),
+    .bscanid_en             (bscanid_en               )
+  );
+
 endmodule // cl_wiredancer

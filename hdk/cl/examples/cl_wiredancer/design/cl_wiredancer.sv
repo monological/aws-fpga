@@ -32,11 +32,7 @@ module cl_wiredancer
 `include "cl_id_defines.vh"       // Defines for ID0 and ID1 (PCI ID's)
 `include "cl_dram_dma_defines.vh"
 
-`include "unused_flr_template.inc"
 `include "unused_ddr_template.inc"
-// `include "unused_pcim_template.inc"
-// `include "unused_dma_pcis_template.inc"
-// `include "unused_sh_ocl_template.inc"
 `include "unused_cl_sda_template.inc"
 `include "unused_apppf_irq_template.inc"
 
@@ -131,6 +127,22 @@ logic rst;
 always_ff @(posedge clk_main_a0) begin
     rst <= ~sync_rst_n;
 end
+
+///////////////////////////////////////////////////////////////////////
+///////////////// FLR resposne ////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+  logic sh_cl_flr_assert_q = 'b0;
+
+  // Auto FLR response
+  always_ff @(posedge clk)
+    if (!rst) begin
+      sh_cl_flr_assert_q <= 0;
+      cl_sh_flr_done     <= 0;
+    end else begin
+      sh_cl_flr_assert_q <= sh_cl_flr_assert;
+      cl_sh_flr_done     <= sh_cl_flr_assert_q && !cl_sh_flr_done;
+    end
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -348,8 +360,6 @@ showahead_fifo #(
 
 assign st_p = st_addr_v & st_data_v;
 
-
-// (If you need to do something with st_addr, st_data, st_data_strb after popping…)
 
 
 ////////////////////////////////////////////////////////////////////////

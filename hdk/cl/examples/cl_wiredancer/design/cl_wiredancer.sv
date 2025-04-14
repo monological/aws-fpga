@@ -51,6 +51,9 @@ module cl_wiredancer
   assign cl_sh_status1      = 'b0;
   assign cl_sh_status2      = 'b0;
 
+  assign cl_sh_id0[31:0] = `CL_SH_ID0;
+  assign cl_sh_id1[31:0] = `CL_SH_ID1;
+
   // Because the code references ddr_ready/hbm_ready but never declared them:
   logic ddr_ready, hbm_ready;
   assign ddr_ready = (EN_DDR) ? 1'b1 : 1'b0;

@@ -139,13 +139,9 @@ logic [NO_AVMM_MASTERS-1:0][32-1:0] avmm_fh_readdata;
 logic [NO_AVMM_MASTERS-1:0]         avmm_fh_readdatavalid;
 logic [NO_AVMM_MASTERS-1:0]         avmm_fh_waitrequest;
 
-// Drive them to 0 by default
-initial begin
-  avmm_fh_read         = '0;
-  avmm_fh_write        = '0;
-  avmm_fh_address      = '0;
-  avmm_fh_writedata    = '0;
-end
+assign avmm_fh_waitrequest    = '0;   // no back‑pressure
+assign avmm_fh_readdatavalid  = avmm_fh_read; // valid when read is active
+assign avmm_fh_readdata       = '0;   // zero read value
 
 ////////////////////////////////////////////////////////////////////////
 // AXI‐Lite (sh_ocl*) minimal state machine
@@ -239,6 +235,8 @@ always_ff @(posedge clk) begin
         cl_ocl_bvalid <= 1'b0;
         avmm_fh_read  <= '0;
         avmm_fh_write <= '0;
+        avmm_fh_address   <= '0;
+        avmm_fh_writedata <= '0;
     end
 end
 

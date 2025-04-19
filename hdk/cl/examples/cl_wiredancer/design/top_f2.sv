@@ -76,6 +76,10 @@ logic [64-1:0]                          timestamp = 0;
 
 logic [32-1:0]                          tr_pending;
 
+
+logic  [63:0]  dma_base_q /* synthesis dont_merge */;
+logic  [63:0]  dma_limit_q/* synthesis dont_merge */;
+
 (* dont_touch = "yes" *) logic [10-1:0] rst_r;
 (* dont_touch = "yes" *) logic [10-1:0] rst_f_r;
 
@@ -230,6 +234,10 @@ always_ff@(posedge clk) begin
         8'h20: avmm_readdata            <= cnt_s[w_i];
         8'h21: avmm_readdata            <= {tr_pending[0+:10], res_o_c[0][0+:10], pcie_il[0]};
         8'h22: avmm_readdata            <= {tr_pending[0+:10], res_o_c[1][0+:10], pcie_il[1]};
+        8'h30: avmm_readdata            <= dma_base_q [31:0];
+        8'h31: avmm_readdata            <= dma_base_q [63:32];
+        8'h32: avmm_readdata            <= dma_limit_q[31:0];
+        8'h33: avmm_readdata            <= dma_limit_q[63:32];
     endcase
 
     if (avmm_write) begin
@@ -245,10 +253,23 @@ always_ff@(posedge clk) begin
             cnt_rst                     <= avmm_writedata[0];
         end
 
+        8'h30: dma_base_q [31:0]        <= avmm_writedata;
+        8'h31: dma_base_q [63:32]       <= avmm_writedata;
+        8'h32: dma_limit_q[31:0]        <= avmm_writedata;
+        8'h33: dma_limit_q[63:32]       <= avmm_writedata;
+
     endcase
     end else begin
         cnt_rst                         <= 0;
         cnt_snp                         <= 0;
+    end
+end
+
+// Reset the new registers
+always_ff @(posedge clk) begin
+    if (rst) begin
+        dma_base_q  <= 64'd0;
+        dma_limit_q <= 64'd0;
     end
 end
 
@@ -433,8 +454,8 @@ dma_result #(
 
     .send_fails                 (send_fails),
 
-    .priv_base                  (priv_bytes[0+:8]),
-    .priv_mask                  (priv_bytes[8+:8]),
+    .cfg_base                   (dma_base_q),
+    .cfg_limit                  (dma_limit_q),
 
     .clk                        (clk),
     .rst                        (rst_r[2])

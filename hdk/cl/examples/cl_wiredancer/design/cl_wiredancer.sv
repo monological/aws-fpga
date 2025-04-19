@@ -325,68 +325,96 @@ assign st_v[1]                          = st_addr_v & st_data_v[2] & st_data_v[1
 
 
 ////////////////////////////////////////////////////////////////////////
-// Minimal bridging to PCIM master interface
+// Minimal bridging to PCIM master interface (FIXED)
 ////////////////////////////////////////////////////////////////////////
 
-logic [1-1:0]                           dma_r;
-logic [1-1:0]                           dma_push;
-logic [64-1:0]                          dma_push_a;
-logic [64-1:0]                          dma_push_b;
-logic [1-1:0]                           dma_full_a;
-logic [1-1:0]                           dma_full_d;
-logic [256-1:0]                         dma_push_d;
+logic dma_r;
+logic dma_push;
+logic [63:0] dma_push_a;
+logic [63:0] dma_push_b;
+logic dma_full_a;
+logic dma_full_d;
+logic [255:0] dma_push_d;
+logic [255:0] cl_sh_pcim_wdata_h;
 
-logic [256-1:0]                         cl_sh_pcim_wdata_h;
+// Enable write if FIFOs have room
+assign dma_r = ~dma_full_a & ~dma_full_d;
 
-assign dma_r                            = (~dma_full_a) & (~dma_full_d);
+assign cl_sh_pcim_awid     = '0;
+assign cl_sh_pcim_awlen    = '0;
+assign cl_sh_pcim_awsize   = 3'b110;  // 64B (512-bit)
+assign cl_sh_pcim_awburst  = 2'b01;   // INCR
+assign cl_sh_pcim_awcache  = 4'b0011;
+assign cl_sh_pcim_awlock   = 1'b0;
+assign cl_sh_pcim_awprot   = 3'b000;
+assign cl_sh_pcim_awqos    = 4'b0000;
+assign cl_sh_pcim_awuser   = '0;
+assign cl_sh_pcim_wid      = '0;
+assign cl_sh_pcim_wdata    = {2{cl_sh_pcim_wdata_h}}; // replicate for 512-bit bus
+assign cl_sh_pcim_wstrb    = cl_sh_pcim_wstrb; // from FIFO below
+assign cl_sh_pcim_wlast    = 1'b1;
+assign cl_sh_pcim_wuser    = '0;
+assign cl_sh_pcim_bready   = 1'b1;
+assign cl_sh_pcim_arid     = '0;
+assign cl_sh_pcim_araddr   = '0;
+assign cl_sh_pcim_arlen    = '0;
+assign cl_sh_pcim_arsize   = 3'b110;
+assign cl_sh_pcim_arburst  = 2'b01;
+assign cl_sh_pcim_arcache  = 4'b0011;
+assign cl_sh_pcim_arlock   = 1'b0;
+assign cl_sh_pcim_arprot   = 3'b000;
+assign cl_sh_pcim_arqos    = 4'b0000;
+assign cl_sh_pcim_aruser   = '0;
+assign cl_sh_pcim_arvalid  = 1'b0;
 
-assign cl_sh_pcim_awid                  = '0;
-assign cl_sh_pcim_awlen                 = '0;
-assign cl_sh_pcim_awsize                = 'b110;
-assign cl_sh_pcim_wlast                 = '1;
-assign cl_sh_pcim_wdata                 = {2{cl_sh_pcim_wdata_h}};
-assign cl_sh_pcim_bready                = '1;
+assign cl_sh_pcim_rready   = 1'b1;
+
+// Control logic for AXI4 handshake
+logic fifo_has_data;
+assign fifo_has_data       = cl_sh_pcim_awvalid && sh_cl_pcim_awready &&
+                             cl_sh_pcim_wvalid  && sh_cl_pcim_wready;
+
+assign cl_sh_pcim_awvalid  = !rst && cl_sh_pcim_awaddr_valid;
+assign cl_sh_pcim_wvalid   = !rst && cl_sh_pcim_wdata_valid;
+
+logic cl_sh_pcim_awaddr_valid;
+logic cl_sh_pcim_wdata_valid;
 
 showahead_fifo #(
-    .WIDTH                              ($bits({dma_push_a})),
-    .FULL_THRESH                        (512-64),
-    .DEPTH                              (512)
+    .WIDTH ($bits(dma_push_a)),
+    .FULL_THRESH (512-64),
+    .DEPTH (512)
 ) dma_addr_fifo_inst (
-    .aclr                               (rst),
-
-    .wr_clk                             (clk),
-    .wr_req                             (dma_push & dma_r),
-    .wr_full                            (dma_full_a),
-    .wr_data                            ({dma_push_a}),
-
-    .rd_clk                             (clk),
-    .rd_req                             (cl_sh_pcim_awvalid & sh_cl_pcim_awready),
-    .rd_empty                           (),
-    .rd_not_empty                       (cl_sh_pcim_awvalid),
-    .rd_count                           (),
-    .rd_data                            ({cl_sh_pcim_awaddr})
+    .aclr       (rst),
+    .wr_clk     (clk),
+    .wr_req     (dma_push & dma_r),
+    .wr_full    (dma_full_a),
+    .wr_data    (dma_push_a),
+    .rd_clk     (clk),
+    .rd_req     (fifo_has_data),
+    .rd_empty   (),
+    .rd_not_empty (cl_sh_pcim_awaddr_valid),
+    .rd_count   (),
+    .rd_data    (cl_sh_pcim_awaddr)
 );
 
 showahead_fifo #(
-    .WIDTH                              ($bits({dma_push_b, dma_push_d})),
-    .FULL_THRESH                        (512-64),
-    .DEPTH                              (512)
+    .WIDTH ($bits({dma_push_b, dma_push_d})),
+    .FULL_THRESH (512-64),
+    .DEPTH (512)
 ) dma_data_fifo_inst (
-    .aclr                               (rst),
-
-    .wr_clk                             (clk),
-    .wr_req                             (dma_push & dma_r),
-    .wr_full                            (dma_full_d),
-    .wr_data                            ({dma_push_b, dma_push_d}),
-
-    .rd_clk                             (clk),
-    .rd_req                             (cl_sh_pcim_wvalid & sh_cl_pcim_wready),
-    .rd_empty                           (),
-    .rd_not_empty                       (cl_sh_pcim_wvalid),
-    .rd_count                           (),
-    .rd_data                            ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_h})
+    .aclr       (rst),
+    .wr_clk     (clk),
+    .wr_req     (dma_push & dma_r),
+    .wr_full    (dma_full_d),
+    .wr_data    ({dma_push_b, dma_push_d}),
+    .rd_clk     (clk),
+    .rd_req     (fifo_has_data),
+    .rd_empty   (),
+    .rd_not_empty (cl_sh_pcim_wdata_valid),
+    .rd_count   (),
+    .rd_data    ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_h})
 );
-
 
 ////////////////////////////////////////////////////////////////////////
 // Example “top_f2” instance (from your snippet)

@@ -24,8 +24,8 @@ module dma_result #(
     output logic [N_PCIE-1:0][1-1:0]                    res_f,
     output logic [N_PCIE-1:0][1-1:0]                    res_p,
 
-    input wire [64-1:0]                                 priv_base,
-    input wire [64-1:0]                                 priv_mask,
+    input  wire [63:0]                                  cfg_base,
+    input  wire [63:0]                                  cfg_limit,
 
     input wire [1-1:0]                                  send_fails,
 
@@ -53,7 +53,14 @@ generate
         logic [1-1:0]                       res_o_v;
         logic [1-1:0]                       res_o_d;
 
-        assign dma_p_v[g_i]                 = res_o_v & dma_m_v & (|dma_p_dab[g_i].pcim_addr) & (send_fails | res_o_d);
+        logic [63:0] phys_addr = cfg_base + ext_pp_m.dma_addr;
+        wire         in_range  = (phys_addr <= cfg_limit);
+
+        assign dma_p_v[g_i] = res_o_v & dma_m_v &
+                              (|dma_p_dab[g_i].pcim_addr) &
+                              (send_fails | res_o_d)       &
+                              in_range;
+
         assign dma_p_dab[g_i].pcim_strb     = dma_p_dab[g_i].pcim_addr[5] ? 64'hFFFF_FFFF_0000_0000 : 64'h0000_0000_FFFF_FFFF;
         assign dma_p_dab[g_i].ctrl[1:0]     = dma_m_ctrl[1:0];
         assign dma_p_dab[g_i].ctrl[2]       = ~res_o_d;
@@ -77,7 +84,8 @@ generate
         always_ff@(posedge clk) begin
             ext_pp_v                    <= ext_p_v;
             ext_pp_m                    <= ext_p_m;
-            ext_pp_m.dma_addr           <= (ext_p_m.dma_addr & priv_mask) + priv_base;
+            ext_pp_m.dma_addr           <= phys_addr;
+
         end
 
         showahead_fifo #(

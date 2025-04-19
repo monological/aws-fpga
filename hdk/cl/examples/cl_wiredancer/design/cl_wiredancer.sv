@@ -131,21 +131,13 @@ localparam DDR_SIM         = 0;
 logic [NO_DBG_TAPS-1:0][DBG_WIDTH-1:0]  dbg_wires;
 
 // Simple AVMM stubs
-logic [NO_AVMM_MASTERS-1:0] avmm_fh_read;
-logic [NO_AVMM_MASTERS-1:0] avmm_fh_write;
+logic [NO_AVMM_MASTERS-1:0] avmm_fh_read = 0;
+logic [NO_AVMM_MASTERS-1:0] avmm_fh_write = 0;
 logic [NO_AVMM_MASTERS-1:0][32-1:0] avmm_fh_address;
 logic [NO_AVMM_MASTERS-1:0][32-1:0] avmm_fh_writedata;
 logic [NO_AVMM_MASTERS-1:0][32-1:0] avmm_fh_readdata;
 logic [NO_AVMM_MASTERS-1:0]         avmm_fh_readdatavalid;
 logic [NO_AVMM_MASTERS-1:0]         avmm_fh_waitrequest;
-
-// Drive them to 0 by default
-initial begin
-  avmm_fh_read         = '0;
-  avmm_fh_write        = '0;
-  avmm_fh_address      = '0;
-  avmm_fh_writedata    = '0;
-end
 
 ////////////////////////////////////////////////////////////////////////
 // AXI‐Lite (sh_ocl*) minimal state machine
@@ -239,6 +231,8 @@ always_ff @(posedge clk) begin
         cl_ocl_bvalid <= 1'b0;
         avmm_fh_read  <= '0;
         avmm_fh_write <= '0;
+        avmm_fh_address   <= '0;
+        avmm_fh_writedata <= '0;
     end
 end
 

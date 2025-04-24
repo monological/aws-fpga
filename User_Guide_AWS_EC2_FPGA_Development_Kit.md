@@ -9,7 +9,7 @@ The development kit includes example designs to get you familiar with developing
     - [Comparison to F1](#comparison-to-f1)
   - [AWS EC2 F2 FPGA Development Kit](#aws-ec2-f2-fpga-development-kit)
     - [Development Environments](#development-environments)
-    - [Example Links](#example-links)
+    - [Quick Start Links](#quick-start-links)
     - [AWS Shells](#aws-shells)
     - [Hardware Development Kit (HDK)](#hardware-development-kit-hdk)
     - [Software-Defined Development Environment](#software-defined-development-environment)
@@ -49,19 +49,21 @@ This table lists the F2 development flows currently enabled and supported in the
 
 On-premise environment: Customers can set up a on-premise development environment using 2024.1 AMD tools with their own licenses. Refer to this guide [here](./hdk/docs/on_premise_licensing_help.md) for licensing requirements.
 
-### Example Links
+### Quick Start Links
 
 <!-- markdownlint-disable MD033 -->
 <table style="text-align: center">
   <tr>
     <th style="text-align: center">Development Environment</th>
     <th style="text-align: center">Example</th>
+    <th style="text-align: center">Description</th>
     <th style="text-align: center">Quick Start Guide</th>
     <th style="text-align: center">Resources</th>
   </tr>
   <tr>
     <td style="text-align: center" rowspan="12">HDK</td>
     <td style="text-align: center" rowspan="4"><a href="https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_mem_perf">cl_mem_perf</a></td>
+    <td style="text-align: center" rowspan="4">Demonstrates fine-tuned paths to memory to maximize bandwidth</td>
     <td style="text-align: center" rowspan="4"><a href="./hdk/README.md#build-accelerator-afi-using-hdk-design-flow">Guided Example</a></td>
     <td style="text-align: center"><a href="./hdk/cl/examples/cl_mem_perf/README.md">Design Spec</a></td>
   </tr>
@@ -76,6 +78,7 @@ On-premise environment: Customers can set up a on-premise development environmen
   </tr>
   <tr>
     <td style="text-align: center" rowspan="4"><a href="https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma">cl_dram_hbm_dma</a></td>
+    <td style="text-align: center" rowspan="4">Demonstrates connectivity to various internal interfaces from the shell</td>
     <td style="text-align: center" rowspan="4"></td>
     <td style="text-align: center"><a href="./hdk/cl/examples/cl_dram_hbm_dma/README.md">Design Spec</a></td>
   </tr>
@@ -90,6 +93,7 @@ On-premise environment: Customers can set up a on-premise development environmen
   </tr>
   <tr>
     <td style="text-align: center" rowspan="4"><a href="https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_sde">cl_sde</a></td>
+    <td style="text-align: center" rowspan="4"><a href="https://github.com/aws/aws-fpga/blob/f2/sdk/apps/virtual-ethernet/">Demonstrates the use of the Streaming Data Engine (SDE) via the Virtual Ethernet Application</a></td>
     <td style="text-align: center" rowspan="4"></td>
     <td style="text-align: center"><a href="./hdk/cl/examples/cl_sde/README.md">Design Spec</a></td>
   </tr>
@@ -105,6 +109,7 @@ On-premise environment: Customers can set up a on-premise development environmen
   <tr>
     <td style="text-align: center" rowspan="4">Vitis</td>
     <td style="text-align: center" rowspan="4"><a href="https://github.com/Xilinx/Vitis_Accel_Examples/tree/2024.1/hello_world">hello_world</a></td>
+    <td style="text-align: center" rowspan="4">Demonstrates streaming to the FPGA rather than block transferring</td>
     <td style="text-align: center" rowspan="4"><a href="./vitis/README.md">Guided Example</td>
     <td style="text-align: center"><a href="https://github.com/Xilinx/Vitis_Accel_Examples/blob/main/hello_world/README.rst">Design Spec</a></td>
   </tr>

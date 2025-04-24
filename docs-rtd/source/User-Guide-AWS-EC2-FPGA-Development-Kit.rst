@@ -17,7 +17,7 @@ developing for AWS EC2 FPGA Instances.
     Kit <#aws-ec2-f2-fpga-development-kit>`__
 
     - `Development Environments <#development-environments>`__
-    - `Example Links <#example-links>`__
+    - `Quick Start Links <#quick-start-links>`__
     - `AWS Shells <#aws-shells>`__
     - `Hardware Development Kit (HDK) <#hardware-development-kit-hdk>`__
     - `Software-Defined Development
@@ -134,80 +134,97 @@ environment using 2024.1 AMD tools with their own licenses. Refer to
 this guide `here <./hdk/docs/on-premise-licensing-help.html>`__ for
 licensing requirements.
 
-.. _example-links:
+.. _quick-start-links:
 
-Example Links
-~~~~~~~~~~~~~
+Quick Start Links
+~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
-   :widths: 15 15 30 35
+   :widths: 15 15 30 15 25
 
    * - Development Environment
      - Example
+     - Description
      - Quick-Start Guide
      - Resources
    * - HDK
      - `cl_mem_perf <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_mem_perf>`__
+     - Demonstrates fine-tuned paths to memory to maximize bandwidth
      - `Guided Example <./hdk/README.html#getting-started-hdk>`__
      - `Design Spec <./hdk/cl/examples/cl-mem-perf/README.html>`__
    * -
+     -
      -
      -
      - `Design Source Code <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_mem_perf/design>`__
    * -
      -
      -
+     -
      - `Testbench <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_mem_perf/verif>`__
    * -
+     -
      -
      -
      - `Runtime Software <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_mem_perf/software>`__
    * -
      - `cl_dram_hbm_dma <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma>`__
+     - Demonstrates connectivity to various internal interfaces from the shell
      -
      - `Design Spec <./hdk/cl/examples/cl-dram-hbm-dma/README.html>`__
    * -
+     -
      -
      -
      - `Design Source Code <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma/design>`__
    * -
      -
      -
+     -
      - `Testbench <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma/verif>`__
    * -
+     -
      -
      -
      - `Runtime Software <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma/software>`__
    * -
      - `cl_sde <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_sde>`__
+     - `Demonstrates the use of the Streaming Data Engine (SDE) via the Virtual Ethernet Application <https://github.com/aws/aws-fpga/tree/f2/sdk/apps/virtual-ethernet>`__
      -
      - `Design Spec <./hdk/cl/examples/cl-sde/README.html>`__
    * -
+     -
      -
      -
      - `Design Source Code <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_sde/design>`__
    * -
      -
      -
+     -
      - `Testbench <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_sde/verif>`__
    * -
+     -
      -
      -
      - `Runtime Software <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_sde/software>`__
    * - Vitis
      - `hello_world <https://github.com/Xilinx/Vitis_Accel_Examples/tree/2024.1/hello_world>`__
+     - Demonstrates streaming data to the FPGA via the XRT
      - `Guided Example <./vitis/README.html>`__
      - `Design Spec <https://github.com/Xilinx/Vitis_Accel_Examples/blob/main/hello_world/README.rst>`__
    * -
+     -
      -
      -
      - `Design Source Code <https://github.com/Xilinx/Vitis_Accel_Examples/blob/main/hello_world/src/vadd.cpp>`__
    * -
      -
      -
+     -
      - `Testbench <https://github.com/Xilinx/Vitis_Accel_Examples/blob/main/hello_world/src/host.cpp#L92>`__
    * -
+     -
      -
      -
      - `Runtime Software <https://github.com/Xilinx/Vitis_Accel_Examples/blob/main/hello_world/src/host.cpp>`__

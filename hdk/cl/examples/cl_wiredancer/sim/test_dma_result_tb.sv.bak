@@ -1,0 +1,172 @@
+// ============================================================================
+// test_cl_wiredancer_tb.sv  –  final Vivado-compatible bench
+// ============================================================================
+`timescale 1ns/1ps
+
+module test_cl_wiredancer_tb;
+
+  //---------------------------------------------------------------------------
+  // 1. clocks & resets (1 GHz and 1.11 GHz)
+  //---------------------------------------------------------------------------
+  logic clk   = 0;  always #1     clk   = ~clk;
+  logic clk_f = 0;  always #0.9   clk_f = ~clk_f;
+
+  logic rst   = 1, rst_f = 1;
+  initial begin
+    repeat (32) @(posedge clk);   rst   = 0;
+    repeat (32) @(posedge clk_f); rst_f = 0;
+  end
+
+  //---------------------------------------------------------------------------
+  // 2. ports we actually drive / sample
+  //---------------------------------------------------------------------------
+  logic clk_main_a0 = clk;
+  logic rst_main_n  = ~rst;
+
+  /* DMA-PCIS host→CL */
+  logic [63:0]  sh_cl_dma_pcis_awaddr  = 0;
+  logic [2:0]   sh_cl_dma_pcis_awsize  = 0;
+  logic [1:0]   sh_cl_dma_pcis_awburst = 0;
+  logic         sh_cl_dma_pcis_awvalid = 0;
+  wire          cl_sh_dma_pcis_awready;
+
+  logic [511:0] sh_cl_dma_pcis_wdata  = 0;
+  logic [63:0]  sh_cl_dma_pcis_wstrb  = 0;
+  logic         sh_cl_dma_pcis_wlast  = 0;
+  logic         sh_cl_dma_pcis_wvalid = 0;
+  wire          cl_sh_dma_pcis_wready;
+
+  wire          cl_sh_dma_pcis_bvalid;
+  logic         sh_cl_dma_pcis_bready = 0;
+
+  /* internal DUT signals we look at */
+  wire [3:0] pcie_il;
+  wire       dma_r;
+
+  //---------------------------------------------------------------------------
+  // 3. instantiate DUT (all other ports wired by name & unused)
+  //---------------------------------------------------------------------------
+  cl_wiredancer dut (.*);
+
+  //---------------------------------------------------------------------------
+  // 4. match cocotb start-up forces
+  //---------------------------------------------------------------------------
+  initial begin
+    force dut.top_inst.avmm_read  = 0;
+    force dut.top_inst.avmm_write = 0;
+    force dut.top_inst.dma_f      = 0;
+    force dut.top_inst.pcie_v     = 0;
+    force dut.top_inst.send_fails = 1;
+  end
+
+  //---------------------------------------------------------------------------
+  // 5. random dma_r pulses (~1 every 50 cycles)
+  //---------------------------------------------------------------------------
+  initial forever begin
+    @(posedge clk);
+    if ($urandom_range(0,49) == 0) begin
+      force dut.dma_r = 1;
+      @(posedge clk);
+      force dut.dma_r = 0;
+    end
+  end
+
+  //---------------------------------------------------------------------------
+  // 6. post-reset settling (2048 cycles)
+  //---------------------------------------------------------------------------
+  initial begin
+    @(negedge rst);
+    repeat (2048) @(posedge clk);
+  end
+
+  //---------------------------------------------------------------------------
+  // 7. helper to flip one random bit in a 512-bit payload
+  //---------------------------------------------------------------------------
+  task automatic corrupt_blk (inout logic [511:0] blk);
+      integer byte_idx;
+      integer bit_idx;
+      integer flat_idx;
+
+      byte_idx = $urandom_range(0,63);   // which 8-bit byte
+      bit_idx  = $urandom_range(0,7);    // which bit inside that byte
+      flat_idx = byte_idx * 8 + bit_idx; // absolute bit position 0-511
+
+      blk[flat_idx] = ~blk[flat_idx];    // invert that single bit
+  endtask
+
+  //---------------------------------------------------------------------------
+  // 8. single 64-B DMA write
+  //---------------------------------------------------------------------------
+  task automatic dma_write64(input logic [63:0]  addr,
+                             input logic [511:0] data);
+    /* AW */
+    sh_cl_dma_pcis_awaddr  <= addr;
+    sh_cl_dma_pcis_awsize  <= 3'b110;
+    sh_cl_dma_pcis_awburst <= 2'b01;
+    sh_cl_dma_pcis_awvalid <= 1;
+    @(posedge clk);
+    wait (cl_sh_dma_pcis_awready);
+    sh_cl_dma_pcis_awvalid <= 0;
+
+    /* W */
+    sh_cl_dma_pcis_wdata  <= data;
+    sh_cl_dma_pcis_wstrb  <= '1;
+    sh_cl_dma_pcis_wlast  <= 1;
+    sh_cl_dma_pcis_wvalid <= 1;
+    @(posedge clk);
+    wait (cl_sh_dma_pcis_wready);
+    sh_cl_dma_pcis_wvalid <= 0;
+    sh_cl_dma_pcis_wlast  <= 0;
+
+    /* B */
+    sh_cl_dma_pcis_bready <= 1;
+    wait (cl_sh_dma_pcis_bvalid);
+    sh_cl_dma_pcis_bready <= 0;
+  endtask
+
+  //---------------------------------------------------------------------------
+  // 9. main stimulus – 32 transactions, random gaps/back-pressure
+  //---------------------------------------------------------------------------
+  logic [63:0] pcie_a = 0;
+  logic [63:0] pcie_b = 64'h1_0000_0000;      // 1 << 32
+  integer      tid    = 32'hABCD0000 - 1;
+
+  initial begin : MAIN
+    automatic integer iter;
+    automatic integer blk_cnt;
+    automatic integer blk;
+    automatic logic   [511:0] payload;
+
+    @(negedge rst);
+
+    for (iter = 0; iter < 32; iter = iter + 1) begin
+      /* idle 10-250 cycles */
+      repeat ($urandom_range(10,250)) @(posedge clk);
+
+      /* wait until FIFO depth small */
+      while (dut.top_inst.pcie_il[0] > 2) @(posedge clk);
+
+      blk_cnt = $urandom_range(1,3);
+
+      for (blk = 0; blk < blk_cnt; blk = blk + 1) begin
+        /* random payload */
+        payload = {$urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom};
+
+        /* ≈30 % chance to corrupt */
+        if ($urandom_range(0,99) < 30) corrupt_blk(payload);
+
+        dma_write64(pcie_b | pcie_a, payload);
+        pcie_a = (pcie_a + 64) & ((64'h1 << 34) - 1);  // wrap @34 bits
+      end
+    end
+
+    /* drain time */
+    repeat (1024) @(posedge clk);
+    $display("✅  test_cl_wiredancer_tb completed.");
+    $finish;
+  end
+
+endmodule

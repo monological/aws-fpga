@@ -20,7 +20,8 @@ module schl_cpu_instr_rom #(
 
 reg [ROM_WIDTH-1:0] IR [0:ROM_DEPTH-1];
 initial begin
-  $readmemb(`PATH_TO_INSTR_ROM_MIF, IR, 0, ROM_DEPTH-1);
+  //$readmemb(`PATH_TO_INSTR_ROM_MIF, IR, 0, ROM_DEPTH-1);
+  $readmemb("schl_cpu_instr_rom.mif", IR, 0, ROM_DEPTH-1);
 end
 always_ff@(posedge clk)begin
   if(a_en==1'b1) begin

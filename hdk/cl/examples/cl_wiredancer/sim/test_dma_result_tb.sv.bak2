@@ -1,0 +1,221 @@
+// ============================================================================
+// test_cl_wiredancer_tb.sv
+// End-to-end test of CL_WIREDANCER PCIS (ingress) and PCIM (egress) channels
+// ============================================================================
+
+`timescale 1ns/1ps
+
+module test_cl_wiredancer_tb;
+
+  //----------------------------------------------------------------------------
+  // 1.  DUT clocks & resets
+  //----------------------------------------------------------------------------
+  logic clk   = 0;  always #1     clk   = ~clk;       // 1 GHz
+  logic clk_f = 0;  always #0.9   clk_f = ~clk_f;     // 1.11 GHz
+
+  logic rst = 1, rst_f = 1;                           // active-high
+  initial begin
+    repeat (32) @(posedge clk);   rst   = 0;
+    repeat (32) @(posedge clk_f); rst_f = 0;
+  end
+
+  //----------------------------------------------------------------------------
+  // 2.  DUT port stubs we need
+  //----------------------------------------------------------------------------
+  logic clk_main_a0 = clk;
+  logic rst_main_n  = ~rst;
+
+  // ── DMA-PCIS host → CL ────────────────────────────────────────────────────
+  logic [63:0]  sh_cl_dma_pcis_awaddr  = 0;
+  logic [2:0]   sh_cl_dma_pcis_awsize  = 0;
+  logic [1:0]   sh_cl_dma_pcis_awburst = 0;
+  logic         sh_cl_dma_pcis_awvalid = 0;
+  wire          cl_sh_dma_pcis_awready;
+
+  logic [511:0] sh_cl_dma_pcis_wdata  = 0;
+  logic [63:0]  sh_cl_dma_pcis_wstrb  = 0;
+  logic         sh_cl_dma_pcis_wlast  = 0;
+  logic         sh_cl_dma_pcis_wvalid = 0;
+  wire          cl_sh_dma_pcis_wready;
+
+  wire          cl_sh_dma_pcis_bvalid;
+  logic         sh_cl_dma_pcis_bready = 0;
+
+  // ── PCIM CL → host ────────────────────────────────────────────────────────
+  wire  [63:0]  cl_sh_pcim_awaddr;
+  wire          cl_sh_pcim_awvalid;
+  logic         sh_cl_pcim_awready = 1;
+
+  wire [511:0]  cl_sh_pcim_wdata;
+  wire          cl_sh_pcim_wvalid;
+  wire          cl_sh_pcim_wlast;
+  logic         sh_cl_pcim_wready  = 1;
+
+  wire          cl_sh_pcim_wstrb;       // 64-bit wide inside DUT
+  wire [1:0]    sh_cl_pcim_bresp;
+  logic         sh_cl_pcim_bvalid = 0;
+  wire          cl_sh_pcim_bready;
+
+  // design-internal helpers
+  wire [3:0] pcie_il;
+  wire       dma_r;
+
+  //----------------------------------------------------------------------------
+  // 3.  Instantiate DUT
+  //----------------------------------------------------------------------------
+  cl_wiredancer dut (.*);
+
+  //----------------------------------------------------------------------------
+  // 4.  Force start-up values the Python test assumed
+  //----------------------------------------------------------------------------
+  initial begin
+    force dut.top_inst.avmm_read  = 0;
+    force dut.top_inst.avmm_write = 0;
+    force dut.top_inst.dma_f      = 0;
+    force dut.top_inst.pcie_v     = 0;
+    force dut.top_inst.send_fails = 1;
+  end
+
+  //----------------------------------------------------------------------------
+  // 5.  Random dma_r pulses (~1 per 50 cycles)
+  //----------------------------------------------------------------------------
+  initial forever begin
+    @(posedge clk);
+    if ($urandom_range(0,49) == 0) begin
+      force dut.dma_r = 1'b1;
+      @(posedge clk)  force dut.dma_r = 1'b0;
+    end
+  end
+
+  //----------------------------------------------------------------------------
+  // 6.  Queues & scoreboard data structures
+  //----------------------------------------------------------------------------
+  typedef struct packed {
+    logic [63:0]  addr;
+    logic [511:0] data;
+  } txn_t;
+
+  txn_t  exp_q  [$];    // expected order (what we push in on PCIS)
+  txn_t  aw_q   [$];    // AWs seen on PCIM
+  txn_t  w_q    [$];    // W-data seen on PCIM
+
+  integer mismatches = 0;
+
+  //----------------------------------------------------------------------------
+  // 7.  Helper tasks
+  //----------------------------------------------------------------------------
+  task automatic corrupt_blk (inout logic [511:0] blk);
+    int byte_i = $urandom_range(0,63);
+    int bit_i  = $urandom_range(0,7);
+    blk[byte_i*8 + bit_i] = ~blk[byte_i*8 + bit_i];
+  endtask
+
+  task automatic dma_write64(input logic [63:0]  addr,
+                             input logic [511:0] data);
+    // AW
+    sh_cl_dma_pcis_awaddr  <= addr;
+    sh_cl_dma_pcis_awsize  <= 3'b110;             // 64 B
+    sh_cl_dma_pcis_awburst <= 2'b01;              // INCR
+    sh_cl_dma_pcis_awvalid <= 1;
+    @(posedge clk);
+    wait (cl_sh_dma_pcis_awready);
+    sh_cl_dma_pcis_awvalid <= 0;
+
+    // W
+    sh_cl_dma_pcis_wdata  <= data;
+    sh_cl_dma_pcis_wstrb  <= '1;
+    sh_cl_dma_pcis_wlast  <= 1;
+    sh_cl_dma_pcis_wvalid <= 1;
+    @(posedge clk);
+    wait (cl_sh_dma_pcis_wready);
+    sh_cl_dma_pcis_wvalid <= 0;
+    sh_cl_dma_pcis_wlast  <= 0;
+
+    // B
+    sh_cl_dma_pcis_bready <= 1;
+    wait (cl_sh_dma_pcis_bvalid);
+    sh_cl_dma_pcis_bready <= 0;
+  endtask
+
+  //----------------------------------------------------------------------------
+  // 8.  Back-pressure on PCIM coming from "host"
+  //----------------------------------------------------------------------------
+  always @(posedge clk) begin
+    sh_cl_pcim_awready <= ($urandom_range(0,3) != 0); // 75 % ready
+    sh_cl_pcim_wready  <= ($urandom_range(0,3) != 0);
+  end
+  assign sh_cl_pcim_bresp  = 2'b00;      // OKAY
+  assign cl_sh_pcim_bready = 1'b1;       // DUT always ready
+
+  //----------------------------------------------------------------------------
+  // 9.  Capture PCIM traffic & compare when complete
+  //----------------------------------------------------------------------------
+  // AW monitor
+  always @(posedge clk)
+    if (cl_sh_pcim_awvalid && sh_cl_pcim_awready)
+      aw_q.push_back('{addr: cl_sh_pcim_awaddr, data:'0});
+
+  // W monitor
+  always @(posedge clk)
+    if (cl_sh_pcim_wvalid && sh_cl_pcim_wready && cl_sh_pcim_wlast)
+      w_q.push_back('{addr:'0, data: cl_sh_pcim_wdata});
+
+  // When both queues have entries, compare against expected
+  always @(posedge clk)
+    if (aw_q.size() && w_q.size()) begin
+      txn_t got_aw = aw_q.pop_front();
+      txn_t got_w  = w_q.pop_front();
+      txn_t exp    = exp_q.pop_front();
+
+      if (got_aw.addr !== exp.addr || got_w.data !== exp.data)
+        mismatches++;
+      // send B one cycle later
+      sh_cl_pcim_bvalid <= 1;
+    end else
+      sh_cl_pcim_bvalid <= 0;
+
+  //----------------------------------------------------------------------------
+  // 10.  Main stimulus  (32 TXNs, 1-3 blocks each)
+  //----------------------------------------------------------------------------
+  logic [63:0] pcie_a = 0;
+  logic [63:0] pcie_b = 64'h1_0000_0000;        // 1 << 32
+
+  initial begin : MAIN
+    int iter, blk_cnt, blk;
+    logic [511:0] payload;
+
+    @(negedge rst);
+
+    for (iter = 0; iter < 32; iter++) begin
+      repeat ($urandom_range(10,250)) @(posedge clk); // idle gap
+      while (dut.top_inst.pcie_il[0] > 2) @(posedge clk);
+
+      blk_cnt = $urandom_range(1,3);
+
+      for (blk = 0; blk < blk_cnt; blk++) begin
+        payload = {$urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom,
+                   $urandom,$urandom,$urandom,$urandom};
+        if ($urandom_range(0,99) < 30) corrupt_blk(payload);
+
+        exp_q.push_back('{addr: pcie_b | pcie_a, data: payload});
+        dma_write64(pcie_b | pcie_a, payload);
+
+        pcie_a = (pcie_a + 64) & ((64'h1 << 34) - 1); // wrap @34 b
+      end
+    end
+
+    // let outstanding PCIM traffic drain
+    repeat (4096) @(posedge clk);
+
+    if (mismatches==0 && exp_q.size()==0 && aw_q.size()==0 && w_q.size()==0)
+      $display("✅  PCIS-in / PCIM-out round-trip PASSED");
+    else
+      $error ("❌  mismatches=%0d  expQ=%0d  awQ=%0d  wQ=%0d",
+              mismatches,       exp_q.size(), aw_q.size(), w_q.size());
+
+    $finish;
+  end
+
+endmodule

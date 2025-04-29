@@ -1,0 +1,1 @@
+"work.test_dma_result_tb" -L "xpm" -L "unisims_ver" -L "unimacro_ver" -timescale "1ns/1ps" -debug "typical" 

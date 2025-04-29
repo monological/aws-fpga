@@ -30,7 +30,7 @@ module cl_wiredancer
 );
 
 `include "cl_id_defines.vh"       // Defines for ID0 and ID1 (PCI ID's)
-`include "cl_dram_dma_defines.vh"
+`include "cl_wiredancer_defines.vh"
 
 `include "unused_ddr_template.inc"
 `include "unused_cl_sda_template.inc"
@@ -276,6 +276,11 @@ always_ff @(posedge clk) begin
 end
 
 // FIFO that holds addresses from AW channel:
+logic        st_data_v;
+logic [255:0] st_data;
+logic [31:0]  st_data_strb;
+logic         st_data_fifo_wr_full;
+logic [5:0]   st_data_fifo_rd_count;
 logic st_addr_v;
 wire st_p;
 logic [63:0] st_addr;
@@ -301,11 +306,7 @@ showahead_fifo #(
 
 // FIFO that holds the W data+strobe
 // Notice we changed [32] to [31] (top bit) to avoid out-of-range indexing
-logic        st_data_v;
-logic [255:0] st_data;
-logic [31:0]  st_data_strb;
-logic         st_data_fifo_wr_full;
-logic [5:0]   st_data_fifo_rd_count;
+
 
 showahead_fifo #(
     .WIDTH(288),
@@ -441,27 +442,5 @@ showahead_fifo #(
     .clk               (clk),
     .rst               (rst)
 );
-
-
-cl_ila
-  #(
-    .DDR_A_PRESENT          (`DDR_A_PRESENT           )
-  )
-  CL_ILA
-  (
-    .aclk                   (clk_main_a0              ),
-    .drck                   (drck                     ),
-    .shift                  (shift                    ),
-    .tdi                    (tdi                      ),
-    .update                 (update                   ),
-    .sel                    (sel                      ),
-    .tdo                    (tdo                      ),
-    .tms                    (tms                      ),
-    .tck                    (tck                      ),
-    .runtest                (runtest                  ),
-    .reset                  (reset                    ),
-    .capture                (capture                  ),
-    .bscanid_en             (bscanid_en               )
-  );
 
 endmodule // cl_wiredancer

@@ -16,22 +16,21 @@
 // ============================================================================
 
 
-`ifndef CL_DRAM_DMA_DEFINES
-`define CL_DRAM_DMA_DEFINES
+`ifndef CL_MEM_PERF_DEFINES
+`define CL_MEM_PERF_DEFINES
 
   //Put module name of the CL design here.  This is used to instantiate in top.sv
-  `define CL_NAME cl_wiredancer
+  `define CL_NAME cl_mem_perf
 
-  //Highly recommeneded.  For lib FIFO block, uses less async reset (take advantage of
+  //Highly recommeneded.  For lib FIFO block, does not use async reset (take advantage of
   // FPGA flop init capability).  This will help with routing resources.
   `define FPGA_LESS_RST
 
-  `define SH_SDA
-  //uncomment below to make SH and CL async
-  `define SH_CL_ASYNC
-
   // Uncomment to disable Virtual JTAG
   //`define DISABLE_VJTAG_DEBUG
+
+  // Uncomment to select 64GB DDR controller with user-controlled auto-precharge (AP)
+  // `define USE_AP_64GB_DDR_DIMM
 
   // Defining local macros that will instantiate the desired DDR controllers in
   // the CL.
@@ -41,25 +40,13 @@
     `define DDR_A_PRESENT 0
   `endif
 
-  `ifndef DDR_B_ABSENT
-    `define DDR_B_PRESENT 1
-  `else
-    `define DDR_B_PRESENT 0
-  `endif
-
-  `ifndef DDR_D_ABSENT
-    `define DDR_D_PRESENT 1
-  `else
-    `define DDR_D_PRESENT 0
-  `endif
-
   // Default AXI values
   `define DEF_AXSIZE    3'd6   // 64 Bytes per beat
   `define DEF_AXBURST   2'd1   // INCR burst
-  `define DEF_AXCACHE   4'd3   // Bufferable, Modifiable
+  `define DEF_AXCACHE   4'd1   // Bufferable, Non-Cacheable, No Read-Allocate, No Write-Allocate
   `define DEF_AXLOCK    1'd0   // Normal access
-  `define DEF_AXPROT    3'd2 // Unprivileged access, Non-Secure Access
+  `define DEF_AXPROT    3'd2   // Unprivileged access, Non-Secure Access
   `define DEF_AXQOS     4'd0   // Regular Identifier
   `define DEF_AXREGION  4'd0   // Single region
 
-`endif
+`endif //  `ifndef CL_MEM_PERF_DEFINES

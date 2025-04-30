@@ -27,7 +27,8 @@
 create_pblock pblock_CL_SLR2
 
 # Complete CRs in SLR2
-resize_pblock pblock_CL_SLR2 -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
+# Match the parent pblock width to avoid DRC errors
+resize_pblock pblock_CL_SLR2 -add {CLOCKREGION_X0Y8:CLOCKREGION_X5Y11}
 
 set_property parent pblock_CL [get_pblocks pblock_CL_SLR2]
 
@@ -100,28 +101,36 @@ resize_pblock pblock_CL_SLR0 -add {SLICE_X221Y60:SLICE_X232Y119 \
                                    GTYE4_COMMON_X1Y1:GTYE4_COMMON_X1Y1 \
                                    GTYE4_CHANNEL_X1Y4:GTYE4_CHANNEL_X1Y7}
 
+
 set_property parent pblock_CL [get_pblocks pblock_CL_SLR0]
+
 
 ########################################
 # Wiredancer
 ########################################
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha512_pre_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/pad_th_inst*}]
+# PCIS logic: appears in DMA/PCIM bridging in cl_wiredancer
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/st_in_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/dma_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/pcim_*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha512_modq_meta_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha_th_inst*}]
+# PCIM logic: PCIM bridge master interface
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/cl_sh_pcim*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv0_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_0_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv0_th_inst*}]
+# OCL AXI-lite logic: control path state machine
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/st_ocl*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/avmm_fh_*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv1_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_1_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv1_th_inst*}]
+# DDR ready logic (just a logic tie-off)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/ddr_ready}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv2_i_pipe_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv2_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_2_inst*}]
+# HBM logic (if applicable in design; optional if not used)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/hbm_ready}]
+
+# Monitoring/status (vdip, vled, bresp_status)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/vdip_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/bresp_status}]
+
+# Consolidate all `top_inst` modules to SLR1 unless overridden by functionality
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst*}]
 

@@ -143,22 +143,33 @@ add_cells_to_pblock pblock_CL_SLR0 [get_cells [list WRAPPER/CL/CL_DMA_PCIS_SLV/C
 # Wiredancer
 ########################################
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha512_pre_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/pad_th_inst*}]
+# PCIS logic: appears in DMA/PCIM bridging in cl_wiredancer
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/st_in_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/dma_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/pcim_*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha512_modq_meta_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sha_th_inst*}]
+# PCIM logic: PCIM bridge master interface
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/cl_sh_pcim*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv0_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_0_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv0_th_inst*}]
+# OCL AXI-lite logic: control path state machine
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/st_ocl*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/avmm_fh_*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv1_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_1_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv1_th_inst*}]
+# SDA unused template logic
+add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/unused_cl_sda_template_inst*}]
 
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv2_i_pipe_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/sv2_f_inst*}]
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst/ed25519_sigverify_2_inst*}]
+# DDR ready logic (just a logic tie-off)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/ddr_ready}]
 
+# HBM logic (if applicable in design; optional if not used)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/hbm_ready}]
+
+# Monitoring/status (vdip, vled, bresp_status)
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/vdip_*}]
+add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/bresp_status}]
+
+# Previously the entire `top_inst` hierarchy was constrained to SLR1, which
+# can cause placement failures when the available resources are insufficient.
+# Commenting out this constraint allows Vivado to distribute the logic across
+# available SLRs.
+#add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst*}]

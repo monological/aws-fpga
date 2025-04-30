@@ -244,8 +244,19 @@ end
 
 
 ////////////////////////////////////////////////////////////////////////
-// Simple "VDIP" wiring for demonstration
+// vdip, vled
 ////////////////////////////////////////////////////////////////////////
+
+logic [7:0] bresp_status;
+
+always_ff @(posedge clk) begin
+    if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00) begin
+        bresp_status <= {6'b0, sh_cl_pcim_bresp};  // Show BRESP[1:0] in LED
+    end
+    if (rst) begin
+        bresp_status <= 8'h00;
+    end
+end
 
 logic [3:0] vdip_func;
 logic [3:0] vdip_sel;
@@ -260,6 +271,7 @@ always_ff @(posedge clk_main_a0) begin
     end
 
     cl_sh_status_vled <= { vdip_bytes[vdip_sel], vdip_sel, vdip_func };
+    vdip_bytes[15] <= bresp_status;
 end
 
 
@@ -273,12 +285,13 @@ assign cl_sh_dma_pcis_bresp   = 2'b00;
 
 // We ack the write once we see wlast
 always_ff @(posedge clk) begin
-  cl_sh_dma_pcis_bvalid <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
-  cl_sh_dma_pcis_bid    <= sh_cl_dma_pcis_awid;
-  if (rst) begin
-    cl_sh_dma_pcis_bvalid <= 1'b0;
-    cl_sh_dma_pcis_bid    <= 4'b0;
-  end
+    if (rst) begin
+        cl_sh_dma_pcis_bvalid <= 1'b0;
+        cl_sh_dma_pcis_bid    <= 4'b0;
+    else
+        cl_sh_dma_pcis_bvalid <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
+        cl_sh_dma_pcis_bid    <= sh_cl_dma_pcis_awid;
+    end
 end
 
 // FIFO that holds addresses from AW channel:
@@ -287,6 +300,7 @@ wire st_p;
 logic [63:0] st_addr;
 logic st_v;
 assign st_v = st_addr_v & st_data_v;
+
 showahead_fifo #(
     .WIDTH(64),
     .DEPTH(32)
@@ -333,8 +347,6 @@ showahead_fifo #(
 
 assign st_p = st_addr_v & st_data_v;
 
-
-
 ////////////////////////////////////////////////////////////////////////
 // Minimal bridging to PCIM master interface
 ////////////////////////////////////////////////////////////////////////
@@ -343,63 +355,81 @@ logic        dma_push;
 logic        dma_r;
 logic        dma_full_a, dma_full_d;
 logic [63:0] dma_push_a;   // addresses
-logic [63:0] dma_push_b;   // strobe, or user-coded
+logic [63:0] dma_push_b;   // unused (WSTRB not needed now)
 logic [255:0] dma_push_d;  // 256-bit data chunk
 
-// PCIM Master signals
-assign cl_sh_pcim_awid   = 4'b0;
-assign cl_sh_pcim_awlen  = 8'b0;
-assign cl_sh_pcim_awsize = 3'b110;
-assign cl_sh_pcim_wlast  = 1'b1;
-assign cl_sh_pcim_bready = 1'b1;  // always accept B
+// --------------------------------------------------------------------
+// FIFO Handshake Logic
+// --------------------------------------------------------------------
+logic        pcim_awvalid, pcim_wvalid;
+logic        pcim_fifo_dequeue;
+logic [63:0] pcim_awaddr;
+logic [255:0] pcim_wdata_half;
 
-logic [255:0] cl_sh_pcim_wdata_h;  // half of final 512 bits
+// --------------------------------------------------------------------
+// AXI4 Master Interface (static fields)
+assign cl_sh_pcim_awid    = 4'b0000;
+assign cl_sh_pcim_awlen   = 8'b0;
+assign cl_sh_pcim_awsize  = 3'b110;
+assign cl_sh_pcim_wlast   = 1'b1;
+assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
+assign cl_sh_pcim_wdata   = {2{pcim_wdata_half}};  // Duplicate 256b to 512b
+assign cl_sh_pcim_wstrb   = 64'hFFFFFFFFFFFFFFFF;  // Required: full 512-bit write
 
-assign cl_sh_pcim_wdata = {2{cl_sh_pcim_wdata_h}};
-
-// Address FIFO
+// --------------------------------------------------------------------
+// FIFO Instances
+// --------------------------------------------------------------------
 showahead_fifo #(
-    .WIDTH($bits(dma_push_a)),
+    .WIDTH(64),
     .FULL_THRESH(512-64),
     .DEPTH(512)
 ) dma_addr_fifo_inst (
-    .aclr    (rst),
-
-    .wr_clk  (clk),
-    .wr_req  (dma_push & dma_r),
-    .wr_full (dma_full_a),
-    .wr_data (dma_push_a),
-
-    .rd_clk  (clk),
-    .rd_req  (cl_sh_pcim_awvalid & sh_cl_pcim_awready),
-    .rd_empty(),
-    .rd_not_empty(cl_sh_pcim_awvalid),
-    .rd_count(),
-    .rd_data (cl_sh_pcim_awaddr)
+    .aclr          (rst),
+    .wr_clk        (clk),
+    .wr_req        (dma_push & dma_r),
+    .wr_full       (dma_full_a),
+    .wr_data       (dma_push_a),
+    .rd_clk        (clk),
+    .rd_req        (pcim_fifo_dequeue),
+    .rd_empty      (),
+    .rd_not_empty  (pcim_awvalid),
+    .rd_count      (),
+    .rd_data       (pcim_awaddr)
 );
 
-// Data FIFO
 showahead_fifo #(
-    .WIDTH($bits({dma_push_b, dma_push_d})),
+    .WIDTH(256),
     .FULL_THRESH(512-64),
     .DEPTH(512)
 ) dma_data_fifo_inst (
-    .aclr    (rst),
-
-    .wr_clk  (clk),
-    .wr_req  (dma_push & dma_r),
-    .wr_full (dma_full_d),
-    .wr_full_b (),
-    .wr_count  (),
-    .wr_data ({dma_push_b, dma_push_d}),
-
-    .rd_clk  (clk),
-    .rd_req  (cl_sh_pcim_wvalid & sh_cl_pcim_wready),
-    .rd_empty(),
-    .rd_not_empty(cl_sh_pcim_wvalid),
-    .rd_count(),
-    .rd_data ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_h})
+    .aclr          (rst),
+    .wr_clk        (clk),
+    .wr_req        (dma_push & dma_r),
+    .wr_full       (dma_full_d),
+    .wr_full_b     (),
+    .wr_count      (),
+    .wr_data       (dma_push_d),
+    .rd_clk        (clk),
+    .rd_req        (pcim_fifo_dequeue),
+    .rd_empty      (),
+    .rd_not_empty  (pcim_wvalid),
+    .rd_count      (),
+    .rd_data       (pcim_wdata_half)
 );
+
+// --------------------------------------------------------------------
+// Push logic from staging FIFO to PCIM write pipeline
+// --------------------------------------------------------------------
+assign dma_r     = ~dma_full_a & ~dma_full_d;
+
+// Dequeue only when both AW and W channels are ready
+assign pcim_fifo_dequeue = pcim_awvalid && pcim_wvalid &&
+                           sh_cl_pcim_awready && sh_cl_pcim_wready;
+
+// Drive PCIM AXI4 valid signals
+assign cl_sh_pcim_awvalid = pcim_awvalid;
+assign cl_sh_pcim_awaddr  = pcim_awaddr;
+assign cl_sh_pcim_wvalid  = pcim_wvalid;
 
 
 ////////////////////////////////////////////////////////////////////////

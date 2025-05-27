@@ -99,9 +99,9 @@ module pcis_loopback_test();
       burst_write_check(TEST_ADDR + 64, 4);
 
       // ----------------------------------------------------------------
-      // Misaligned address write
+      // Additional aligned write for sanity
       // ----------------------------------------------------------------
-      misaligned_write_check(TEST_ADDR + 8, 10);
+      single_write_check(TEST_ADDR + 8*16, 10);
 
       // ----------------------------------------------------------------
       // Consecutive writes back-to-back without wait

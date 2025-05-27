@@ -50,6 +50,16 @@ assign cl_sh_apppf_irq_req = 16'b0;
   assign cl_sh_pcim_awuser  = 'b0;
   assign cl_sh_pcim_aruser  = 'b0;
 
+  // The PCIS read channel is unused. Tie off all outputs to
+  // prevent 'X' propagation that triggers protocol checker errors.
+  assign cl_sh_dma_pcis_arready = 1'b0;
+  assign cl_sh_dma_pcis_rid     = '0;
+  assign cl_sh_dma_pcis_rdata   = '0;
+  assign cl_sh_dma_pcis_rresp   = 2'b00;
+  assign cl_sh_dma_pcis_rlast   = 1'b0;
+  assign cl_sh_dma_pcis_ruser   = '0;
+  assign cl_sh_dma_pcis_rvalid  = 1'b0;
+
   assign cl_sh_status0      = 'b0;
   assign cl_sh_status1      = 'b0;
   assign cl_sh_status2      = 'b0;

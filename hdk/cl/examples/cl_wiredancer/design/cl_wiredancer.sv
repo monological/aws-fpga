@@ -290,33 +290,33 @@ always_ff @(posedge clk) begin
   end
 end
 
-// FIFO that holds addresses from AW channel:
-logic st_addr_v;
-wire st_p;
-logic [63:0] st_addr;
-logic st_v;
-assign st_v = st_addr_v & st_data_v;
-showahead_fifo #(
-    .WIDTH(64),
-    .DEPTH(32)
-) st_in_addr_fifo_inst (
-    .aclr      (rst),
-    .wr_clk    (clk),
-    .wr_req    (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
-    .wr_full   (),
-    .wr_data   ({sh_cl_dma_pcis_awaddr}),
+ // FIFO that holds AW address and length for incoming bursts
+ logic aw_fifo_v;
+ logic aw_fifo_pop;
+ logic [63:0] aw_addr_q;
+ logic [7:0]  aw_len_q;
 
-    .rd_clk    (clk),
-    .rd_req    (st_p),
-    .rd_empty  (),
-    .rd_not_empty(st_addr_v),
-    .rd_count  (),
-    .rd_data   (st_addr)
-);
+ showahead_fifo #(
+     .WIDTH(72),
+     .DEPTH(32)
+) aw_fifo_inst (
+     .aclr      (rst),
+     .wr_clk    (clk),
+     .wr_req    (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
+     .wr_full   (),
+     .wr_data   ({sh_cl_dma_pcis_awaddr, sh_cl_dma_pcis_awlen}),
 
-// FIFO that holds the W data+strobe
-// Notice we changed [32] to [31] (top bit) to avoid out-of-range indexing
-logic        st_data_v;
+     .rd_clk    (clk),
+     .rd_req    (aw_fifo_pop),
+     .rd_empty  (),
+     .rd_not_empty(aw_fifo_v),
+     .rd_count  (),
+     .rd_data   ({aw_addr_q, aw_len_q})
+ );
+
+ // FIFO that holds W channel data and strobe
+wire        st_p;          // dequeue signal for data FIFO
+logic       st_data_v;
 logic [255:0] st_data;
 logic [31:0]  st_data_strb;
 logic         st_data_fifo_wr_full;
@@ -348,7 +348,6 @@ logic        dma_push;
 logic        dma_r;
 logic        dma_full_a, dma_full_d;
 logic [63:0] dma_push_a;   // addresses
-logic [63:0] dma_push_b;   // unused (WSTRB not needed now)
 logic [255:0] dma_push_d;  // 256-bit data chunk
 
 // --------------------------------------------------------------------
@@ -413,10 +412,10 @@ showahead_fifo #(
 // --------------------------------------------------------------------
 // Push logic from staging FIFO to PCIM write pipeline
 // --------------------------------------------------------------------
-assign dma_r     = ~dma_full_a & ~dma_full_d;
-// Read from the PCIS FIFOs only when the PCIM path can accept another beat
-// dma_r is asserted when the PCIM address and data FIFOs are not full.
-assign st_p = st_addr_v & st_data_v & dma_r;
+assign dma_r = ~dma_full_a & ~dma_full_d;
+
+// Read from the PCIS FIFOs only when there is an active burst or a new AW entry
+assign st_p = (aw_active || aw_fifo_v) & st_data_v & dma_r;
 
 // Dequeue only when both AW and W channels are ready
 assign pcim_fifo_dequeue = pcim_awvalid && pcim_wvalid &&
@@ -427,16 +426,46 @@ assign cl_sh_pcim_awvalid = pcim_awvalid;
 assign cl_sh_pcim_awaddr  = pcim_awaddr;
 assign cl_sh_pcim_wvalid  = pcim_wvalid;
 
-
 ////////////////////////////////////////////////////////////////////////
-// Simple PCIS to PCIM loopback
+// Simple PCIS to PCIM loopback with burst address handling
 ////////////////////////////////////////////////////////////////////////
 
-// When a complete beat is available on the PCIS FIFOs and the PCIM path
-// is ready, push the transaction directly into the PCIM FIFOs.
-assign dma_push   = st_p;
-assign dma_push_a = st_addr;
-assign dma_push_b = 64'h0;
-assign dma_push_d = st_data;
+logic        aw_active;
+logic [63:0] cur_addr;
+logic [7:0]  beats_left;
+
+always_ff @(posedge clk) begin
+    dma_push       <= 1'b0;
+    aw_fifo_pop    <= 1'b0;
+
+    if (rst) begin
+        aw_active   <= 1'b0;
+        cur_addr    <= 64'd0;
+        beats_left  <= 8'd0;
+    end else begin
+        if (st_p) begin
+            dma_push   <= 1'b1;
+            dma_push_d <= st_data;
+
+            if (!aw_active) begin
+                // start of a new burst
+                aw_fifo_pop <= 1'b1;
+                dma_push_a  <= aw_addr_q;
+                cur_addr    <= aw_addr_q + 64;
+                beats_left  <= aw_len_q;
+                aw_active   <= (aw_len_q != 0);
+            end else begin
+                dma_push_a  <= cur_addr;
+                cur_addr    <= cur_addr + 64;
+                if (beats_left != 0) begin
+                    beats_left <= beats_left - 1;
+                end else begin
+                    aw_active  <= 1'b0;
+                end
+            end
+        end
+    end
+end
+
 
 endmodule // cl_wiredancer

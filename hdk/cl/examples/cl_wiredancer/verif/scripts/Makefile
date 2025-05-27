@@ -22,6 +22,10 @@ endif
 
 include $(HDK_COMMON_DIR)/verif/tb/scripts/Makefile.header.inc
 
+# Provide the path to the instruction ROM MIF used by the small
+# soft CPU in cl_wiredancer.  The synthesis flow passes this define
+# via the tcl script; simulation needs it as well.
+DEFAULT_DEFINES += $(call define, PATH_TO_INSTR_ROM_MIF="$(CL_DIR)/design/schl_cpu_instr_rom.mif")
 ### Files required to do C cosimulation
 C_FILES = $(C_SDK_USR_UTILS_DIR)/sh_dpi_tasks.c $(C_COMMON_DIR)/src/fpga_pci_sv.c
 C_INCLUDE_DIRS = $(C_SDK_USR_INC_DIR) $(C_SDK_USR_UTILS_DIR) $(C_COMMON_DIR)/include $(C_COMMON_DIR)/src $(C_INC_DIR) $(C_HEADER_INCLUDE_DIR)

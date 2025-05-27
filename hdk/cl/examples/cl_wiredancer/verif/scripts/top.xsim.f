@@ -27,6 +27,7 @@
 
 -include $CL_DIR/design/
 
+$CL_DIR/design/cl_id_defines.vh
 $CL_DIR/design/areset_sync.sv
 $CL_DIR/design/schl_cpu_instr_rom.sv
 $CL_DIR/design/ed25519_sub_modp.sv

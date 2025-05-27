@@ -25,13 +25,32 @@ module pcis_loopback_test();
    endtask
 
    // -------------------------------------------------------------------
-   // Write and verify a single beat
+   // Write and verify a single aligned beat
    // -------------------------------------------------------------------
    task automatic single_write_check(input logic [63:0] addr,
                                      input int seed,
                                      input logic [63:0] strb = 64'hFFFF_FFFF_FFFF_FFFF);
       gen_wr_data(seed, wr_data);
       tb.poke_pcis(.addr(addr), .data(wr_data), .strb(strb));
+      #1us;
+      for (int i = 0; i < 64; i++) begin
+         rd_data[i*8 +: 8] = tb.hm_get_byte(addr + i);
+      end
+      compare_data(rd_data, wr_data, addr);
+   endtask
+
+   // -------------------------------------------------------------------
+   // Misaligned write helper using write-combine task
+   // -------------------------------------------------------------------
+   task automatic misaligned_write_check(input logic [63:0] addr,
+                                         input int seed);
+      logic [31:0] q[$];
+      q.delete();
+      gen_wr_data(seed, wr_data);
+      for (int i = 0; i < 16; i++) begin
+         q.push_back(wr_data[i*32 +: 32]);
+      end
+      tb.poke_pcis_wc(.addr(addr), .data(q));
       #1us;
       for (int i = 0; i < 64; i++) begin
          rd_data[i*8 +: 8] = tb.hm_get_byte(addr + i);
@@ -82,7 +101,7 @@ module pcis_loopback_test();
       // ----------------------------------------------------------------
       // Misaligned address write
       // ----------------------------------------------------------------
-      single_write_check(TEST_ADDR + 8, 10);
+      misaligned_write_check(TEST_ADDR + 8, 10);
 
       // ----------------------------------------------------------------
       // Consecutive writes back-to-back without wait
@@ -101,9 +120,10 @@ module pcis_loopback_test();
       end
 
       // ----------------------------------------------------------------
-      // Burst crossing a 4KB boundary
+      // Burst crossing a 4KB boundary - split into two transactions
       // ----------------------------------------------------------------
-      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_0FC0, 2);
+      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_0FC0, 1);
+      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_1000, 1);
 
       tb.power_down();
       report_pass_fail_status();

@@ -34,7 +34,10 @@ module cl_wiredancer
 
 `include "unused_ddr_template.inc"
 `include "unused_cl_sda_template.inc"
-`include "unused_apppf_irq_template.inc"
+// Tie off the application PF interrupt request signals. Including the template
+// caused a syntax issue when compiling with XSIM, so perform the assignment
+// directly here instead of relying on the include file.
+assign cl_sh_apppf_irq_req = 16'b0;
 
 ///////////////////////////////////////////////////////////////////////
 // Unused signals
@@ -343,8 +346,6 @@ showahead_fifo #(
     .rd_data     ({st_data, st_data_strb})
 );
 
-assign st_p = st_addr_v & st_data_v;
-
 ////////////////////////////////////////////////////////////////////////
 // Minimal bridging to PCIM master interface
 ////////////////////////////////////////////////////////////////////////
@@ -419,6 +420,9 @@ showahead_fifo #(
 // Push logic from staging FIFO to PCIM write pipeline
 // --------------------------------------------------------------------
 assign dma_r     = ~dma_full_a & ~dma_full_d;
+// Read from the PCIS FIFOs only when the PCIM path can accept another beat
+// dma_r is asserted when the PCIM address and data FIFOs are not full.
+assign st_p = st_addr_v & st_data_v & dma_r;
 
 // Dequeue only when both AW and W channels are ready
 assign pcim_fifo_dequeue = pcim_awvalid && pcim_wvalid &&
@@ -431,50 +435,15 @@ assign cl_sh_pcim_wvalid  = pcim_wvalid;
 
 
 ////////////////////////////////////////////////////////////////////////
-// Example “top_f2” instance (from your snippet)
+// Simple PCIS to PCIM loopback
 ////////////////////////////////////////////////////////////////////////
 
-`ifndef TOP_NAME
-`define TOP_NAME top_f2
-`endif
-
-`TOP_NAME #(
-  .DBG_WIDTH(DBG_WIDTH),
-  .DMA_N     (DMA_N)
-) top_inst (
-    .avmm_read         (avmm_fh_read [0]),
-    .avmm_write        (avmm_fh_write[0]),
-    .avmm_address      (avmm_fh_address[0]),
-    .avmm_writedata    (avmm_fh_writedata[0]),
-    .avmm_readdata     (avmm_fh_readdata[0]),
-    .avmm_readdatavalid(avmm_fh_readdatavalid[0]),
-    .avmm_waitrequest  (avmm_fh_waitrequest[0]),
-
-    .priv_bytes        (vdip_bytes),
-
-    // PCIE bridging (input side)
-    .pcie_v(st_v),
-    .pcie_a(st_addr),
-    .pcie_d(st_data),
-
-    // Example DMA push
-    .dma_r             (dma_r),
-    .dma_v             (dma_push),
-    .dma_a             (dma_push_a),
-    .dma_b             (dma_push_b),
-    .dma_f             (dma_full_a | dma_full_d),
-    .dma_d             (dma_push_d),
-
-    .dbg_wire          (dbg_wires[0]),
-
-    // Used to clock SV. Change to faster clock domain for
-    // higher throughput. 
-    .clk_f             (clk),
-    .rst_f             (rst),
-
-    .clk               (clk),
-    .rst               (rst)
-);
+// When a complete beat is available on the PCIS FIFOs and the PCIM path
+// is ready, push the transaction directly into the PCIM FIFOs.
+assign dma_push   = st_p;
+assign dma_push_a = st_addr;
+assign dma_push_b = 64'h0;
+assign dma_push_d = st_data;
 
 
 cl_ila

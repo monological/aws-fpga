@@ -459,6 +459,11 @@ always_ff @(posedge clk) begin
                 cur_addr    <= cur_addr + 64;
                 if (beats_left != 0) begin
                     beats_left <= beats_left - 1;
+                    // After the decrement, aw_active should deassert when no
+                    // beats remain. Without this check, aw_active could stay
+                    // high after the last beat which causes the next burst to
+                    // reuse the previous address.
+                    aw_active  <= (beats_left != 1);
                 end else begin
                     aw_active  <= 1'b0;
                 end

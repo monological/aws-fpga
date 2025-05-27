@@ -40,6 +40,25 @@ module pcis_loopback_test();
    endtask
 
    // -------------------------------------------------------------------
+   // Misaligned write helper using write-combine task
+   // -------------------------------------------------------------------
+   task automatic misaligned_write_check(input logic [63:0] addr,
+                                         input int seed);
+      logic [31:0] q[$];
+      q.delete();
+      gen_wr_data(seed, wr_data);
+      for (int i = 0; i < 16; i++) begin
+         q.push_back(wr_data[i*32 +: 32]);
+      end
+      tb.poke_pcis_wc(.addr(addr), .data(q));
+      #1us;
+      for (int i = 0; i < 64; i++) begin
+         rd_data[i*8 +: 8] = tb.hm_get_byte(addr + i);
+      end
+      compare_data(rd_data, wr_data, addr);
+   endtask
+
+   // -------------------------------------------------------------------
    // Burst write using write-combine helper
    // -------------------------------------------------------------------
    task automatic burst_write_check(input logic [63:0] addr,

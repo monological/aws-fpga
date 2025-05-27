@@ -452,6 +452,8 @@ always_ff @(posedge clk) begin
         aw_active   <= 1'b0;
         cur_addr    <= 64'd0;
         beats_left  <= 8'd0;
+        dma_push_a  <= 64'd0;
+        dma_push_d  <= 256'd0;
     end else begin
         if (st_p) begin
             dma_push   <= 1'b1;

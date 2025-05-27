@@ -137,19 +137,7 @@ synth_design -mode out_of_context \
              -verilog_define PATH_TO_INSTR_ROM_MIF=\"$CL_DIR/design/schl_cpu_instr_rom.mif\"
 
 ###############################################################################
-print "Connecting debug network"
-###############################################################################
 
-#---- User would replace this section -----
-
-# Connect debug network
-set cl_ila_cells [get_cells [list CL_ILA/CL_DMA_ILA_0 CL_ILA/ddr_A_hookup.CL_DDRA_ILA_0]]
-if {$cl_ila_cells != ""} {
-  connect_debug_cores -master [get_cells [get_debug_cores -filter {NAME=~*CL_DEBUG_BRIDGE*}]] \
-                      -slaves $cl_ila_cells
-}
-
-#---- End of section replaced by User ----
 
 
 

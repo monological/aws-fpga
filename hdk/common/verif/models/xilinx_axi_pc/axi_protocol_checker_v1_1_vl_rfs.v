@@ -2550,6 +2550,7 @@ module axi_protocol_checker_v1_1_12_core #(
   wire                            wcheckPop;
   reg  [log2(MAXWBURSTS):0]       AWXferCount[0:ID_SIZE];
   reg                             AWXferCountOverflow;
+  localparam [log2(MAXWBURSTS):0] AWXFERCOUNT_MAX = {1'b1,{log2(MAXWBURSTS){1'b0}}};
   wire                            AWPush;
   wire                            WLastPush;
 
@@ -3467,7 +3468,7 @@ end
         //  Increment on AWID - AW+WLast's Complete
         // Trigger error when 
         if (wcheckPop == 1'b1) begin
-          if (AWXferCount[AWIDOut] == {1'b1,{log2(MAXWBURSTS){1'b0}}}) begin
+          if (AWXferCount[AWIDOut] == AWXFERCOUNT_MAX) begin
             AWXferCountOverflow <= 1'b1;
           end
           AWXferCount[AWIDOut] <= AWXferCount[AWIDOut] + 1;

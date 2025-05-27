@@ -143,12 +143,6 @@ logic [NO_AVMM_MASTERS-1:0]         avmm_fh_readdatavalid;
 logic [NO_AVMM_MASTERS-1:0]         avmm_fh_waitrequest;
 
 // Drive them to 0 by default
-initial begin
-  avmm_fh_read         = '0;
-  avmm_fh_write        = '0;
-  avmm_fh_address      = '0;
-  avmm_fh_writedata    = '0;
-end
 
 ////////////////////////////////////////////////////////////////////////
 // AXI‐Lite (sh_ocl*) minimal state machine
@@ -336,7 +330,7 @@ showahead_fifo #(
     .wr_clk      (clk),
     .wr_req      (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
     .wr_full     (st_data_fifo_wr_full),
-    .wr_data     ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb}),
+    .wr_data     ({sh_cl_dma_pcis_wdata[255:0], sh_cl_dma_pcis_wstrb[31:0]}),
 
     .rd_clk      (clk),
     .rd_req      (st_p),
@@ -444,27 +438,5 @@ assign dma_push   = st_p;
 assign dma_push_a = st_addr;
 assign dma_push_b = 64'h0;
 assign dma_push_d = st_data;
-
-
-cl_ila
-  #(
-    .DDR_A_PRESENT          (`DDR_A_PRESENT           )
-  )
-  CL_ILA
-  (
-    .aclk                   (clk_main_a0              ),
-    .drck                   (drck                     ),
-    .shift                  (shift                    ),
-    .tdi                    (tdi                      ),
-    .update                 (update                   ),
-    .sel                    (sel                      ),
-    .tdo                    (tdo                      ),
-    .tms                    (tms                      ),
-    .tck                    (tck                      ),
-    .runtest                (runtest                  ),
-    .reset                  (reset                    ),
-    .capture                (capture                  ),
-    .bscanid_en             (bscanid_en               )
-  );
 
 endmodule // cl_wiredancer

@@ -27,8 +27,57 @@
 
 -include $CL_DIR/design/
 
-$CL_DIR/design/cl_wiredancer.sv
 $CL_DIR/design/cl_id_defines.vh
+$CL_DIR/design/areset_sync.sv
+$CL_DIR/design/schl_cpu_instr_rom.sv
+$CL_DIR/design/ed25519_sub_modp.sv
+$CL_DIR/design/address_map.xlsx
+$CL_DIR/design/sha512_modq_meta.sv
+$CL_DIR/design/ed25519_sigverify_1.sv
+$CL_DIR/design/cl_vio.sv
+$CL_DIR/design/ed25519_add_modp.sv
+$CL_DIR/design/ed25519_sigverify_ecc.sv
+$CL_DIR/design/schl_cpu.sv
+$CL_DIR/design/sha512_block.sv
+$CL_DIR/design/ed25519_mul_modp.sv
+$CL_DIR/design/top_f2.sv.bak
+$CL_DIR/design/cl_ocl_slv.sv
+$CL_DIR/design/cl_tst_scrb.sv
+$CL_DIR/design/cl_tst.sv
+$CL_DIR/design/dma_result.sv
+$CL_DIR/design/cl_int_tst.sv
+$CL_DIR/design/tid_inorder.sv
+$CL_DIR/design/cl_int_slv.sv
+$CL_DIR/design/cl_dram_dma_axi_mstr.sv
+$CL_DIR/design/dual_clock_showahead_fifo.sv
+$CL_DIR/design/cl_dram_dma_pkg.sv
+$CL_DIR/design/ed25519_point_dbl.sv
+$CL_DIR/design/mul_wide.sv
+$CL_DIR/design/showahead_fifo.sv
+$CL_DIR/design/wd_pkg.sv
+$CL_DIR/design/cl_pcim_mstr.sv
+$CL_DIR/design/cl_dma_pcis_slv.sv
+$CL_DIR/design/ed25519_sigverify_2.sv
+$CL_DIR/design/sha512_msgseq.sv
+$CL_DIR/design/ed25519_sigverify_0.sv
+$CL_DIR/design/sha512_modq.sv
+$CL_DIR/design/ed25519_sigverify_dsdp_mul.sv
+$CL_DIR/design/pcie_inorder.sv
+$CL_DIR/design/axil_slave.sv
+$CL_DIR/design/simple_dual_port_ram.sv
+$CL_DIR/design/cl_dram_dma.sv
+$CL_DIR/design/cl_sda_slv.sv
+$CL_DIR/design/ed25519_point_add.sv
+$CL_DIR/design/mem_scrb.sv
+$CL_DIR/design/sha512_round.sv
+$CL_DIR/design/pcie_tr_ext.sv
+$CL_DIR/design/key_store.sv
+$CL_DIR/design/cl_ila.sv
+$CL_DIR/design/cl_wiredancer.sv.bak
+$CL_DIR/design/cl_wiredancer.sv
+$CL_DIR/design/schl_cpu_instr_rom.mif
+$CL_DIR/design/sha512_pre.sv
+$CL_DIR/design/sha512_sch.sv
 
 ##### END AUTO-GENERATE ######
 ##############################

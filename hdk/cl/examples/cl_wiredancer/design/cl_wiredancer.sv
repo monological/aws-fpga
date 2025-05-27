@@ -34,7 +34,10 @@ module cl_wiredancer
 
 `include "unused_ddr_template.inc"
 `include "unused_cl_sda_template.inc"
-`include "unused_apppf_irq_template.inc"
+// Tie off the application PF interrupt request signals. Including the template
+// caused a syntax issue when compiling with XSIM, so perform the assignment
+// directly here instead of relying on the include file.
+assign cl_sh_apppf_irq_req = 16'b0;
 
 ///////////////////////////////////////////////////////////////////////
 // Unused signals

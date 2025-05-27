@@ -22,6 +22,12 @@ endif
 
 include $(HDK_COMMON_DIR)/verif/tb/scripts/Makefile.header.inc
 
+# Disable automatic generation of simulator file lists so that the
+# manually maintained `top.xsim.f` file is used. This prevents unused
+# design files such as `top_f2.sv.bak` from being compiled when running
+# simple simulations like the PCIS loopback test.
+export DONT_GENERATE_FILE_LIST := 1
+
 # Provide the path to the instruction ROM MIF used by the small
 # soft CPU in cl_wiredancer.  The synthesis flow passes this define
 # via the tcl script; simulation needs it as well.

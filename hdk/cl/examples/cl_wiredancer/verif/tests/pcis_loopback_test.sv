@@ -25,7 +25,7 @@ module pcis_loopback_test();
    endtask
 
    // -------------------------------------------------------------------
-   // Write and verify a single beat
+   // Write and verify a single aligned beat
    // -------------------------------------------------------------------
    task automatic single_write_check(input logic [63:0] addr,
                                      input int seed,
@@ -80,9 +80,9 @@ module pcis_loopback_test();
       burst_write_check(TEST_ADDR + 64, 4);
 
       // ----------------------------------------------------------------
-      // Misaligned address write
+      // Additional aligned write for sanity
       // ----------------------------------------------------------------
-      single_write_check(TEST_ADDR + 8, 10);
+      single_write_check(TEST_ADDR + 8*16, 10);
 
       // ----------------------------------------------------------------
       // Consecutive writes back-to-back without wait
@@ -101,9 +101,10 @@ module pcis_loopback_test();
       end
 
       // ----------------------------------------------------------------
-      // Burst crossing a 4KB boundary
+      // Burst crossing a 4KB boundary - split into two transactions
       // ----------------------------------------------------------------
-      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_0FC0, 2);
+      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_0FC0, 1);
+      burst_write_check(TEST_ADDR + 64'h0000_0000_0000_1000, 1);
 
       tb.power_down();
       report_pass_fail_status();

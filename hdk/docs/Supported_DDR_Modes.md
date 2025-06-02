@@ -44,7 +44,7 @@ make TEST=${TEST_NAME} USE_AP_64GB_DDR_DIMM=1
 
 ## Required Build Script Modifications
 
-AWS provides following DDR Core IPs as part of Vivado [cl_ip.xpr](./../common/ip/cl_ip/cl_ip.xpr) project. Users are required to enlist one of the following XCI files in the synthesis scripts, depending on the desired DDR configuration and macros defined:
+AWS provides following DDR Core IPs as part of Vivado [cl_ip.xpr](https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.xpr) project. Users are required to enlist one of the following XCI files in the synthesis scripts, depending on the desired DDR configuration and macros defined:
 
 | Macro definition in top level CL | Description                                                        | DDR XCI file to read in synthesis script |
 |----------------------------------|--------------------------------------------------------------------|------------------------------------------|

@@ -151,7 +151,7 @@ The result will be a directory containing everything in CL_TEMPLATE (renamed to 
 
 All CL design files should be placed under the [design](./design) directory. Please see the [Design](#design) section for information on the CL_TEMPLATE design files.
 
-Users may modify these files and add new ones as their designs grow. Xilinx IP's are available to all CL examples (found under [$AWS_FPGA_REPO_DIR/hdk/common/ip](./../../../common/ip)).
+Users may modify these files and add new ones as their designs grow. Xilinx IP's are available to all CL examples (found under [$AWS_FPGA_REPO_DIR/hdk/common/ip](https://github.com/aws/aws-fpga-resources/tree/Vivado_2024.2-hdk/common/ip)).
 
 ### STEP 3: Develop Design Verification Tests (OPTIONAL)
 
@@ -170,7 +170,7 @@ Or specify an [available simulator](./../../../../README.md#supported-tools-vers
 make CL_TEMPLATE_base_test <SIMULATOR>=1
 ```
 
-This will first generate and compile the simulation libraries required for the requested SIMULATOR. Test results will be stored in the `$CL_DIR/verif/sim/<SIMULATOR>` directory (created upon first simulation run). After adding new IP's to [`$AWS_FPGA_REPO_DIR/hdk/common/ip`](./../../../common/ip) the simulation libraries need to be recompiled: `make regenerate_sim_libs <SIMULATOR>=1`.
+This will first generate and compile the simulation libraries required for the requested SIMULATOR. Test results will be stored in the `$CL_DIR/verif/sim/<SIMULATOR>` directory (created upon first simulation run). After adding new IP's to [`$AWS_FPGA_REPO_DIR/hdk/common/ip`](https://github.com/aws/aws-fpga-resources/tree/Vivado_2024.2-hdk/common/ip) the simulation libraries need to be recompiled: `make regenerate_sim_libs <SIMULATOR>=1`.
 
 #### File List Generation
 
@@ -197,7 +197,7 @@ $CL_DIR/design/CL_TEMPLATE.sv
 
 #### Xilinx/AMD IP Discovery and Compilation
 
-When running your first test, all Xilinx IP's under [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip](./../../../common/ip/cl_ip) are automatically compiled
+When running your first test, all Xilinx IP's under [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip](https://github.com/aws/aws-fpga-resources/tree/Vivado_2024.2-hdk/common/ip/cl_ip) are automatically compiled
 
 - You can find the `xil_defaultlib` library for each simulator in [$AWS_FPGA_REPO_DIR/hdk/common/verif/ip_simulation_libraries/](./../../../common/verif) (created after first simulation run)
 
@@ -207,7 +207,7 @@ If a design adds new IP's, make sure to add the new simulation libraries to `COM
 
 Simulation library names can be found under:
 
-- [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts](./../../../common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts)
+- [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts](https://github.com/aws/aws-fpga-resources/tree/Vivado_2024.2-hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts)
 followed by `<IP_NAME>/<SIMULATOR>/<IP_NAME>.sh`
 
 All verification work is located under the [verif](./verif) directory. Please see the [Verification](#verification) section for the CL_TEMPLATE verification details.
@@ -226,7 +226,7 @@ Once design files have been added and tested, constraint and build script update
    - Additional constraint files to be applied during a build
    - Additional tcl scripts to synthesize the design
    - Xilinx IP's utilized in the design
-     - IP's used in AWS example designs can uncommented be in [synth_CL_TEMPLATE.tcl](./build/scripts/synth_CL_TEMPLATE.tcl) and found under [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip](./../../../common/ip/cl_ip)
+     - IP's used in AWS example designs can uncommented be in [synth_CL_TEMPLATE.tcl](./build/scripts/synth_CL_TEMPLATE.tcl) and found under [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip](https://github.com/aws/aws-fpga-resources/tree/Vivado_2024.2-hdk/common/ip/cl_ip)
      - If a design adds new IP's, make sure to add the new `xci` files to the build script [$CL_DIR/build/scripts/synth_CL_TEMPLATE.tcl](./build/scripts/synth_CL_TEMPLATE.tcl)
 3. Run [aws_build_dcp_from_cl.py](./build/scripts/aws_build_dcp_from_cl.py). All defaults can be found by running `aws_build_dcp_from_cl.py --help`
 

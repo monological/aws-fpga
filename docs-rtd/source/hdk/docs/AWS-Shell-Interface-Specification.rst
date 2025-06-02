@@ -771,7 +771,7 @@ to HBM:
     true
 
   **NOTE:** This step can be skipped if the customer uses the
-  ``CL_HBM`` IP from the `CL examples <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip/cl_ip.runs>`__.
+  ``CL_HBM`` IP from the `CL examples <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.gen/sources_1/ip>`__.
   This IP has the ``MON_APB`` interface enabled and is ready to be
   integrated to a customer design as-is.
 
@@ -938,7 +938,7 @@ Please see the `Shell Floorplan <./shell-floorplan.html>`__ for additional
 details on Shell-CL interface placements in SMALL_SHELL.
 
 For the interfaces that are in both the MID/BOTTOM the recommendation is
-to use flops for pipelining, but don’t constrain to an SLR. You can
+to use flops for pipelining, but don't constrain to an SLR. You can
 constrain logic to a particular SLR by creating PBLOCKs (one per SLR),
 and assigning logic to the PBLOCKs (refer to cl_dram_hbm_dma example
 `small_shell_cl_pnr_user.xdc <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/cl_dram_hbm_dma/build/constraints/small_shell_cl_pnr_user.xdc>`__).

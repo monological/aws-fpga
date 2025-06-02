@@ -255,7 +255,7 @@ design files.
 
 Users may modify these files and add new ones as their designs grow.
 Xilinx IP's are available to all CL examples (found under
-`$AWS_FPGA_REPO_DIR/hdk/common/ip <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip>`__).
+`$AWS_FPGA_REPO_DIR/hdk/common/ip <https://github.com/aws/aws-fpga-resources/>`__).
 
 STEP 3: Develop Design Verification Tests (OPTIONAL)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -285,7 +285,7 @@ This will first generate and compile the simulation libraries required for the
 requested SIMULATOR. Test results will be stored in the
 ``$CL_DIR/verif/sim/<SIMULATOR>`` directory (created upon first simulation
 run). After adding new IP's to
-`$AWS_FPGA_REPO_DIR/hdk/common/ip <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip>`__, the simulation
+`$AWS_FPGA_REPO_DIR/hdk/common/ip <https://github.com/aws/aws-fpga-resources/>`__, the simulation
 libraries need to be recompiled: ``make regenerate_sim_libs <SIMULATOR>=1``.
 
 File List Generation
@@ -318,7 +318,7 @@ Xilinx/AMD IP Discovery and Compilation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When running your first test, all Xilinx IP's under
-`$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip>`__
+`$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip>`__
 are automatically compiled
 
 - You can find the ``xil_defaultlib`` library for each simulator in
@@ -335,7 +335,7 @@ to ``COMMON_LIBLISTS`` in:
 Simulation library names can be found under:
 
 - `$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts
-  <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts>`__ followed
+  <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.ip_user_files/sim_scripts>`__ followed
   by ``<IP_NAME>/<SIMULATOR>/<IP_NAME>.sh``
 
 All verification work is located under the `verif <https://github.com/aws/aws-fpga/tree/f2/hdk/common/verif>`__
@@ -376,7 +376,7 @@ and build scripts can be found in other examples such as
      - IP's used in AWS example designs can uncommented be in
        `synth_CL_TEMPLATE.tcl <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/CL_TEMPLATE/build/scripts/synth_CL_TEMPLATE.tcl>`__
        and found under
-       `$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip>`__
+       `$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip>`__
      - If a design adds new IP's, make sure to add the new ``xci`` files
        to the build script
        `$CL_DIR/build/scripts/synth_CL_TEMPLATE.tcl <https://github.com/aws/aws-fpga/tree/f2/hdk/cl/examples/CL_TEMPLATE/build/scripts/synth_CL_TEMPLATE.tcl>`__

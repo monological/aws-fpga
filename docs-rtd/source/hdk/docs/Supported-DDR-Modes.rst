@@ -81,7 +81,7 @@ Required Build Script Modifications
 -----------------------------------
 
 AWS provides following DDR Core IPs as part of Vivado
-`cl_ip.xpr <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip/cl_ip.xpr>`__ project. Users are
+`cl_ip.xpr <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.xpr>`__ project. Users are
 required to enlist one of the following XCI files in the synthesis
 scripts, depending on the desired DDR configuration and macros defined:
 

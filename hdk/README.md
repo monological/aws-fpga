@@ -439,7 +439,7 @@ After adding new design IPs, make sure to add the new simulation `COMMON_LIBLIST
 
 - Make sure to add the new simulation libraries to `COMMON_LIBLISTS` in [$AWS_FPGA_REPO_DIR/hdk/common/verif/tb/scripts/Makefile.common.inc](./common/verif/tb/scripts/Makefile.common.inc)
   - This is required for XSIM and Questa simulations
-  - These libraries can be found in [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts](./common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts) followed by `"IP_NAME"/"SIMULATOR"/"IP_NAME".sh`
+  - These libraries can be found in [$AWS_FPGA_REPO_DIR/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts](https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.ip_user_files/sim_scripts) followed by `"IP_NAME"/"SIMULATOR"/"IP_NAME".sh`
 - After adding new IP's to [$AWS_FPGA_REPO_DIR/hdk/common/ip](./common/ip) the simulation libraries need to be recompiled
   - Run `make regenerate_sim_libs <XSIM/VCS/QUESTA>=1`
 
@@ -491,7 +491,7 @@ The verif ip_simulation_libraries directory is created during runtime and includ
 
 ### [/ip](./common/ip)
 
-The [ip directory](./common/ip) includes basic IP that is used by CL's.
+The [ip directory](https://github.com/aws/aws-fpga-resources) includes basic IP that is used by CL's.
 
 ### [/lib](./common/lib)
 

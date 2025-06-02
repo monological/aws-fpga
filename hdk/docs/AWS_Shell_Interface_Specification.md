@@ -440,7 +440,7 @@ These steps must be followed to properly connect the monitor interfaces to HBM:
     true
     ```
 
-    **NOTE:** This step can be skipped if the customer uses the `CL_HBM` IP from the [CL examples](./../../hdk/common/ip/cl_ip/). This IP has the `MON_APB` interface enabled and is ready to be integrated to a customer design as-is.
+    **NOTE:** This step can be skipped if the customer uses the `CL_HBM` IP from the [CL examples](https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.gen/sources_1/ip). This IP has the `MON_APB` interface enabled and is ready to be integrated to a customer design as-is.
 
 2. Connect the HBM monitor interface from the shell to the HBM IP. The customer can leave the interface floating if the corresponding HBM rack is not used. For example, the `hbm_apb_p<xx>_1` signals can be left unconnected if HBM rack 1 is unused.
 

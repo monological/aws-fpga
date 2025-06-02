@@ -644,7 +644,7 @@ Verification
 
   - Simulation libraries can be found in
     `hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts
-    <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip/cl_ip.ip_user_files/sim_scripts>`__
+    <https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.ip_user_files/sim_scripts>`__
     followed by ``"IP_NAME"/"SIMULATOR"/"IP_NAME".sh``
 
 - Adding new IPs requires to recompile the simulation libraries
@@ -744,8 +744,8 @@ categorized under four subdirectories:
 ip/
 ~~~
 
-The `ip/ <https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip>`__ directory
-includes all CL IPs .
+The `ip/ <https://github.com/aws/aws-fpga-resources>`__ directory
+includes all CL IPs.
 
 lib/
 ~~~~

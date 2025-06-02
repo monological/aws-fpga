@@ -212,7 +212,7 @@ Embedded Debug Bridge in CL
 ---------------------------
 
 The `CL_Debug_Bridge
-<https://github.com/aws/aws-fpga/tree/f2/hdk/common/ip/cl_ip/cl_ip.srcs/sources_1/ip/cl_debug_bridge/cl_debug_bridge.xci>`__
+<https://github.com/aws/aws-fpga-resources/blob/-/cl_ip/cl_ip.srcs/sources_1/ip/cl_debug_bridge/cl_debug_bridge.xci>`__
 IP must be embedded in the CL design to enable the use of debug cores like ILA
 and VIO. According to the `AMD user guide
 <https://docs.amd.com/r/en-US/ug908-vivado-programming-debugging/Debug-Cores-Clocking-Guidelines>`__

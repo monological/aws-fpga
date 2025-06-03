@@ -46,6 +46,18 @@ module cl_wiredancer
 
   assign cl_sh_pcim_awuser  = 'b0;
   assign cl_sh_pcim_aruser  = 'b0;
+  // The design never issues reads so tie off the entire AR channel
+  assign cl_sh_pcim_arid    = 16'b0;
+  assign cl_sh_pcim_araddr  = 64'b0;
+  assign cl_sh_pcim_arlen   = 8'b0;
+  assign cl_sh_pcim_arsize  = 3'b0;
+  assign cl_sh_pcim_arburst = 2'b0;
+  assign cl_sh_pcim_arcache = 4'b0;
+  assign cl_sh_pcim_arlock  = 1'b0;
+  assign cl_sh_pcim_arprot  = 3'b0;
+  assign cl_sh_pcim_arqos   = 4'b0;
+  assign cl_sh_pcim_arvalid = 1'b0;
+  assign cl_sh_pcim_rready  = 1'b0;
 
   assign cl_sh_status0      = 'b0;
   assign cl_sh_status1      = 'b0;
@@ -369,6 +381,12 @@ logic [255:0] pcim_wdata_half;
 assign cl_sh_pcim_awid    = 4'b0000;
 assign cl_sh_pcim_awlen   = 8'b0;
 assign cl_sh_pcim_awsize  = 3'b110;
+assign cl_sh_pcim_awburst = 2'b01;   // Incrementing burst
+assign cl_sh_pcim_awcache = 4'b0;
+assign cl_sh_pcim_awlock  = 1'b0;
+assign cl_sh_pcim_awprot  = 3'b0;
+assign cl_sh_pcim_awqos   = 4'b0;
+assign cl_sh_pcim_wid     = 16'b0;
 assign cl_sh_pcim_wlast   = 1'b1;
 assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
 assign cl_sh_pcim_wdata   = {2{pcim_wdata_half}};  // Duplicate 256b to 512b

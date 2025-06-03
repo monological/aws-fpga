@@ -100,9 +100,9 @@ resize_pblock pblock_CL_SLR0 -add {SLICE_X221Y60:SLICE_X232Y119 \
                                    GTYE4_COMMON_X1Y1:GTYE4_COMMON_X1Y1 \
                                    GTYE4_CHANNEL_X1Y4:GTYE4_CHANNEL_X1Y7}
 
+
 set_property parent pblock_CL [get_pblocks pblock_CL_SLR0]
 
-resize_pblock [get_pblocks pblock_CL] -add {CLOCKREGION_X0Y0:CLOCKREGION_X7Y11}
 
 ########################################
 # Wiredancer

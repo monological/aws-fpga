@@ -133,8 +133,7 @@ synth_design -mode out_of_context \
              -top ${CL} \
              -verilog_define XSDB_SLV_DIS \
              -part ${DEVICE_TYPE} \
-             -keep_equivalent_registers \
-             -verilog_define PATH_TO_INSTR_ROM_MIF=\"$CL_DIR/design/schl_cpu_instr_rom.mif\"
+             -keep_equivalent_registers
 
 ###############################################################################
 

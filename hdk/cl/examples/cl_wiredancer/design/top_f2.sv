@@ -57,12 +57,12 @@ module top_f2 #(
     input wire [64-1:0]                                 pcie_a,
     input wire [2-1:0][256-1:0]                         pcie_d,
 
-    input wire [1-1:0]                                  dma_r,
-    output logic [1-1:0]                                dma_v,
-    output logic [64-1:0]                               dma_a,
-    output logic [64-1:0]                               dma_b,
-    input wire [1-1:0]                                  dma_f,
-    output logic [256-1:0]                              dma_d,
+    input wire [1-1:0]                                  dma_push_ready,
+    output logic [1-1:0]                                dma_push_valid,
+    output logic [64-1:0]                               dma_push_addr,
+    output logic [64-1:0]                               dma_push_wstrb,
+    input wire [1-1:0]                                  dma_fifo_full,
+    output logic [256-1:0]                              dma_push_data,
 
     output logic [DBG_WIDTH-1:0]                        dbg_wire,
 
@@ -413,12 +413,12 @@ dma_result #(
     .N_PCIE                     (N_PCIE)
 ) dma_result_inst (
 
-    .dma_r                      (dma_r),
-    .dma_v                      (dma_v),
-    .dma_a                      (dma_a),
-    .dma_b                      (dma_b),
-    .dma_f                      (dma_f),
-    .dma_d                      (dma_d),
+    .dma_push_ready             (dma_push_ready),
+    .dma_push_valid             (dma_push_valid),
+    .dma_push_addr              (dma_push_addr),
+    .dma_push_wstrb             (dma_push_wstrb),
+    .dma_fifo_full              (dma_fifo_full),
+    .dma_push_data              (dma_push_data),
 
     .ext_v                      (ext_v),
     .ext_r                      (ext_r),

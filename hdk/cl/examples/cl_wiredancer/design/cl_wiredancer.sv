@@ -351,12 +351,12 @@ assign st_v[1]                          = st_addr_v & st_data_v[2] & st_data_v[1
 // Minimal bridging to PCIM master interface
 ////////////////////////////////////////////////////////////////////////
 
-logic        dma_push;
-logic        dma_r;
-logic        dma_full_a, dma_full_d;
-logic [63:0] dma_push_a;   // addresses
-logic [63:0] dma_push_b;   // unused (WSTRB not needed now)
-logic [255:0] dma_push_d;  // 256-bit data chunk
+logic        dma_push_valid;
+logic        dma_push_ready;
+logic        dma_addr_fifo_full, dma_data_fifo_full;
+logic [63:0] dma_push_addr;   // addresses
+logic [63:0] dma_push_wstrb;  // unused (WSTRB not needed now)
+logic [255:0] dma_push_data;  // 256-bit data chunk
 
 // --------------------------------------------------------------------
 // FIFO Handshake Logic
@@ -392,9 +392,9 @@ showahead_fifo #(
 ) dma_addr_fifo_inst (
     .aclr          (rst),
     .wr_clk        (clk),
-    .wr_req        (dma_push & dma_r),
-    .wr_full       (dma_full_a),
-    .wr_data       (dma_push_a),
+    .wr_req        (dma_push_valid & dma_push_ready),
+    .wr_full       (dma_addr_fifo_full),
+    .wr_data       (dma_push_addr),
     .rd_clk        (clk),
     .rd_req        (pcim_fifo_dequeue),
     .rd_empty      (),
@@ -410,11 +410,11 @@ showahead_fifo #(
 ) dma_data_fifo_inst (
     .aclr          (rst),
     .wr_clk        (clk),
-    .wr_req        (dma_push & dma_r),
-    .wr_full       (dma_full_d),
+    .wr_req        (dma_push_valid & dma_push_ready),
+    .wr_full       (dma_data_fifo_full),
     .wr_full_b     (),
     .wr_count      (),
-    .wr_data       (dma_push_d),
+    .wr_data       (dma_push_data),
     .rd_clk        (clk),
     .rd_req        (pcim_fifo_dequeue),
     .rd_empty      (),
@@ -426,7 +426,7 @@ showahead_fifo #(
 // --------------------------------------------------------------------
 // Push logic from staging FIFO to PCIM write pipeline
 // --------------------------------------------------------------------
-assign dma_r     = ~dma_full_a & ~dma_full_d;
+assign dma_push_ready     = ~dma_addr_fifo_full & ~dma_data_fifo_full;
 
 // Dequeue only when both AW and W channels are ready
 assign pcim_fifo_dequeue = pcim_awvalid && pcim_wvalid &&
@@ -466,12 +466,12 @@ assign cl_sh_pcim_wvalid  = pcim_wvalid;
     .pcie_d(st_data),
 
     // Example DMA push
-    .dma_r             (dma_r),
-    .dma_v             (dma_push),
-    .dma_a             (dma_push_a),
-    .dma_b             (dma_push_b),
-    .dma_f             (dma_full_a | dma_full_d),
-    .dma_d             (dma_push_d),
+    .dma_push_ready    (dma_push_ready),
+    .dma_push_valid    (dma_push_valid),
+    .dma_push_addr     (dma_push_addr),
+    .dma_push_wstrb    (dma_push_wstrb),
+    .dma_fifo_full     (dma_addr_fifo_full | dma_data_fifo_full),
+    .dma_push_data     (dma_push_data),
 
     .dbg_wire          (dbg_wires[0]),
 

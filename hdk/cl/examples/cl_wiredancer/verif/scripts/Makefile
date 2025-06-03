@@ -28,11 +28,7 @@ include $(HDK_COMMON_DIR)/verif/tb/scripts/Makefile.header.inc
 # simple simulations like the PCIS loopback test.
 export DONT_GENERATE_FILE_LIST := 1
 
-# Provide the path to the instruction ROM MIF used by the small
-# soft CPU in cl_wiredancer.  The synthesis flow passes this define
-# via the tcl script; simulation needs it as well.
-#DEFAULT_DEFINES += $(call define, PATH_TO_INSTR_ROM_MIF=$(CL_DIR)/design/schl_cpu_instr_rom.mif)
-DEFAULT_DEFINES += $(call define, PATH_TO_INSTR_ROM_MIF=schl_cpu_instr_rom.mif)
+# No ROM file is required after trimming unused modules
 
 ### Files required to do C cosimulation
 C_FILES = $(C_SDK_USR_UTILS_DIR)/sh_dpi_tasks.c $(C_COMMON_DIR)/src/fpga_pci_sv.c

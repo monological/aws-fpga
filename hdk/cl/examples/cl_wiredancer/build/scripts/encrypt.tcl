@@ -30,59 +30,17 @@ if {[llength [glob -nocomplain -dir $TARGET_DIR *]] != 0} {
   eval file delete -force [glob $TARGET_DIR/*]
 }
 
-#---- Developr would replace this section with design files ----
+# Copy reusable template files
+foreach f [glob -directory $UNUSED_TEMPLATES_DIR *.inc] {
+  file copy -force $f $TARGET_DIR
+}
 
-file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc       $TARGET_DIR
-file copy -force $UNUSED_TEMPLATES_DIR/unused_ddr_template.inc       $TARGET_DIR
-file copy -force $UNUSED_TEMPLATES_DIR/unused_cl_sda_template.inc    $TARGET_DIR
-file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc $TARGET_DIR
+# Copy all design sources
+foreach f [glob -directory $design_dir *.{v,sv,vh,svh,inc,mif}] {
+  file copy -force $f $TARGET_DIR
+}
 
-## Change file names and paths below to reflect your CL area.  DO NOT include AWS RTL files.
-file copy -force $CL_DIR/design/cl_wiredancer.sv                       $TARGET_DIR
-file copy -force $CL_DIR/design/cl_dram_dma_defines.vh                   $TARGET_DIR
-file copy -force $CL_DIR/design/cl_id_defines.vh                         $TARGET_DIR
-file copy -force $CL_DIR/design/cl_tst.sv                                $TARGET_DIR
-file copy -force $CL_DIR/design/cl_int_tst.sv                            $TARGET_DIR
-file copy -force $CL_DIR/design/mem_scrb.sv                              $TARGET_DIR
-file copy -force $CL_DIR/design/cl_tst_scrb.sv                           $TARGET_DIR
-file copy -force $CL_DIR/design/cl_ila.sv                                $TARGET_DIR
-
-# wiredancer files
-file copy -force $CL_DIR/design/dual_clock_showahead_fifo.sv       $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_add_modp.sv                $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_mul_modp.sv                $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_point_add.sv               $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sigverify_0.sv             $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sigverify_1.sv             $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sigverify_2.sv             $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sigverify_dsdp_mul.sv      $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sigverify_ecc.sv           $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_sub_modp.sv                $TARGET_DIR
-file copy -force $CL_DIR/design/key_store.sv                       $TARGET_DIR
-file copy -force $CL_DIR/design/mul_const_ED25519_L0_133.svh       $TARGET_DIR
-file copy -force $CL_DIR/design/mul_const_ED25519_L0_260.svh       $TARGET_DIR
-file copy -force $CL_DIR/design/mul_const_ED25519_L0_6.svh         $TARGET_DIR
-file copy -force $CL_DIR/design/mul_wide.sv                        $TARGET_DIR
-file copy -force $CL_DIR/design/mul_wide_17nx26_dsp48e2.svh        $TARGET_DIR
-file copy -force $CL_DIR/design/pcie_inorder.sv                    $TARGET_DIR
-file copy -force $CL_DIR/design/pcie_tr_ext.sv                     $TARGET_DIR
-file copy -force $CL_DIR/design/schl_cpu_instr_rom.sv              $TARGET_DIR
-file copy -force $CL_DIR/design/schl_cpu.sv                        $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_block.sv                    $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_modq.sv                     $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_modq_meta.sv                $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_msgseq.sv                   $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_pre.sv                      $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_round.sv                    $TARGET_DIR
-file copy -force $CL_DIR/design/sha512_sch.sv                      $TARGET_DIR
-file copy -force $CL_DIR/design/showahead_fifo.sv                  $TARGET_DIR
-file copy -force $CL_DIR/design/simple_dual_port_ram.sv            $TARGET_DIR
-file copy -force $CL_DIR/design/tid_inorder.sv                     $TARGET_DIR
-file copy -force $CL_DIR/design/wd_pkg.sv                          $TARGET_DIR
-file copy -force $CL_DIR/design/dma_result.sv                      $TARGET_DIR
-file copy -force $CL_DIR/design/top_f2.sv                          $TARGET_DIR
-
-#---- End of section replaced by Developr ---
+# End of developer file list
 
 
 

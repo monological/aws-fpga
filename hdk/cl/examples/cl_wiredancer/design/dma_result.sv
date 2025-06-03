@@ -5,12 +5,12 @@ import wd_sigverify::*;
 module dma_result #(
     N_PCIE                                              = 2
 ) (
-    input wire [1-1:0]                                  dma_r,
-    output logic [1-1:0]                                dma_v,
-    output logic [64-1:0]                               dma_a,
-    output logic [64-1:0]                               dma_b,
-    input wire [1-1:0]                                  dma_f,
-    output logic [256-1:0]                              dma_d,
+    input wire [1-1:0]                                  dma_push_ready,
+    output logic [1-1:0]                                dma_push_valid,
+    output logic [64-1:0]                               dma_push_addr,
+    output logic [64-1:0]                               dma_push_wstrb,
+    input wire [1-1:0]                                  dma_fifo_full,
+    output logic [256-1:0]                              dma_push_data,
 
     input wire [N_PCIE-1:0][1-1:0]                      ext_v,
     input wire [N_PCIE-1:0][1-1:0]                      ext_r,
@@ -39,7 +39,7 @@ mcache_pcim_t [N_PCIE-1:0]              dma_p_dab;
 
 logic [64-1:0]                          dma_aa;
 
-assign dma_a                            = {dma_aa[64-1:6], 6'h0};
+assign dma_push_addr                    = {dma_aa[64-1:6], 6'h0};
 
 generate
 
@@ -131,10 +131,10 @@ rrb_merge #(
     .i_e                                ({N_PCIE{1'b1}}),
     .i_m                                (dma_p_dab),
 
-    .o_r                                (dma_r),
-    .o_v                                (dma_v),
+    .o_r                                (dma_push_ready),
+    .o_v                                (dma_push_valid),
     .o_e                                (),
-    .o_m                                ({dma_d, dma_b, dma_aa}),
+    .o_m                                ({dma_push_data, dma_push_wstrb, dma_aa}),
 
     .clk                                (clk),
     .rst                                (rst)
@@ -145,8 +145,8 @@ if (|dma_p_v)
 $display("%t: %m: %b %b - %b %b", $time
 , dma_p_r
 , dma_p_v
-, dma_r
-, dma_v
+, dma_push_ready
+, dma_push_valid
 );
 endmodule
 

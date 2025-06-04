@@ -27,7 +27,8 @@
 create_pblock pblock_CL_SLR2
 
 # Complete CRs in SLR2
-resize_pblock pblock_CL_SLR2 -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
+# Match the parent pblock width to avoid DRC errors
+resize_pblock pblock_CL_SLR2 -add {CLOCKREGION_X0Y8:CLOCKREGION_X5Y11}
 
 set_property parent pblock_CL [get_pblocks pblock_CL_SLR2]
 

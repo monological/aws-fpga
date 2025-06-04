@@ -168,5 +168,8 @@ add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filte
 add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/vdip_*}]
 add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/bresp_status}]
 
-# Consolidate all `top_inst` modules to SLR1 unless overridden by functionality
-add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst*}]
+# Previously the entire `top_inst` hierarchy was constrained to SLR1, which
+# can cause placement failures when the available resources are insufficient.
+# Commenting out this constraint allows Vivado to distribute the logic across
+# available SLRs.
+#add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/top_inst*}]

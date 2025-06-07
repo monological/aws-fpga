@@ -15,7 +15,7 @@
 # limitations under the License.
 # =============================================================================
 
-# Level 1 CL_DRAM_HBM_DMA floorplan for XDMA Shell
+# Level 1 Wiredancer floorplan for XDMA Shell
 
 
 ###############################################################################
@@ -34,13 +34,6 @@ set_property parent pblock_CL [get_pblocks pblock_CL_SLR2]
 ########################################
 # Module Mapping
 ########################################
-add_cells_to_pblock pblock_CL_SLR2 [get_cells [list WRAPPER/CL/SH_DDR \
-                                                    WRAPPER/CL/PIPE_DDR_STAT* \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/CDC_ASYNC_RST_N_SLR2 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/SLR2_PIPE_RST_N \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_PCIS_SLR2 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_DDRA_SLR2 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/CL_TST_DDRA ]]
 
 
 ###############################################################################
@@ -80,8 +73,6 @@ add_cells_to_pblock pblock_CL_SLR1 [get_cells [list WRAPPER/CL/CL_OCL_SLV \
                                                     WRAPPER/CL/CL_DMA_PCIS_SLV/CDC_ASYNC_RST_N_SLR1 \
                                                     WRAPPER/CL/CL_DMA_PCIS_SLV/SLR1_PIPE_RST_N \
                                                     WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_PCIS_SLR1 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_DDRA_SLR1 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_DDRB_SLR1 \
                                                     WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_CROSSBAR]]
 
 
@@ -133,10 +124,7 @@ set_property parent pblock_CL [get_pblocks pblock_CL_SLR0]
 # Module Mapping
 ########################################
 add_cells_to_pblock pblock_CL_SLR0 [get_cells [list WRAPPER/CL/CL_DMA_PCIS_SLV/CDC_ASYNC_RST_N_SLR0 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/SLR0_PIPE_RST_N \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/AXI4_REG_SLC_DDRB_SLR0 \
-                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/CL_TST_DDR_B \
-                                                    WRAPPER/CL/CL_HBM ]]
+                                                    WRAPPER/CL/CL_DMA_PCIS_SLV/SLR0_PIPE_RST_N ]]
 
 
 ########################################
@@ -158,11 +146,6 @@ add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filte
 # SDA unused template logic
 add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/unused_cl_sda_template_inst*}]
 
-# DDR ready logic (just a logic tie-off)
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/ddr_ready}]
-
-# HBM logic (if applicable in design; optional if not used)
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/hbm_ready}]
 
 # Monitoring/status (vdip, vled, bresp_status)
 add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/vdip_*}]

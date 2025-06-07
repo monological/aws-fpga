@@ -22,7 +22,6 @@ source ${HDK_SHELL_DIR}/build/scripts/synth_cl_header.tcl
 set UNUSED_TEMPLATES_DIR $HDK_SHELL_DESIGN_DIR/interfaces
 
 file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc            $CL_DIR/design
-file copy -force $UNUSED_TEMPLATES_DIR/unused_ddr_template.inc            $CL_DIR/design
 file copy -force $UNUSED_TEMPLATES_DIR/unused_cl_sda_template.inc         $CL_DIR/design
 file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc      $CL_DIR/design
 
@@ -36,9 +35,6 @@ print "Reading encrypted user source codes"
 # .vh, nor .inc files
 read_verilog -sv [glob ${src_post_enc_dir}/*.?v]
 
-read_verilog -sv [glob ${src_post_enc_dir}/cl_dram_dma_defines.vh]
-set_property file_type {Verilog Header} [get_files ${src_post_enc_dir}/cl_dram_dma_defines.vh]
-set_property is_global_include true     [get_files ${src_post_enc_dir}/cl_dram_dma_defines.vh]
 
 #---- End of section replaced by User ----
 
@@ -48,23 +44,12 @@ print "Reading CL IP blocks"
 
 #---- User would uncomment the IP's required in their design ----
 
-## DDR IP
-read_ip [ list \
-  ${HDK_IP_SRC_DIR}/cl_ddr4/cl_ddr4.xci
-]
-
-## HBM IP's
-read_ip [ list \
-  ${HDK_IP_SRC_DIR}/cl_hbm_mmcm/cl_hbm_mmcm.xci \
-  ${HDK_IP_SRC_DIR}/cl_hbm/cl_hbm.xci
-]
 
 ## Clocking IP's
 read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/clk_mmcm_a/clk_mmcm_a.xci \
   $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/clk_mmcm_b/clk_mmcm_b.xci \
   $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/clk_mmcm_c/clk_mmcm_c.xci \
-  $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/clk_mmcm_hbm/clk_mmcm_hbm.xci \
   $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/cl_clk_axil_xbar/cl_clk_axil_xbar.xci \
   $HDK_SHELL_DESIGN_DIR/../../ip/cl_ip/cl_ip.srcs/sources_1/ip/cl_sda_axil_xbar/cl_sda_axil_xbar.xci
 ]
@@ -84,7 +69,6 @@ read_ip [ list \
 
 ## AXI Utility IP's
 read_ip [ list \
-  ${HDK_IP_SRC_DIR}/cl_axi_interconnect_64G_ddr/cl_axi_interconnect_64G_ddr.xci
 ]
 
 ## Read IP for virtual jtag / ILA/VIO
@@ -143,7 +127,7 @@ print "Connecting debug network"
 #---- User would replace this section -----
 
 # Connect debug network
-set cl_ila_cells [get_cells [list CL_ILA/CL_DMA_ILA_0 CL_ILA/ddr_A_hookup.CL_DDRA_ILA_0]]
+set cl_ila_cells [get_cells [list CL_ILA/CL_DMA_ILA_0]]
 if {$cl_ila_cells != ""} {
   connect_debug_cores -master [get_cells [get_debug_cores -filter {NAME=~*CL_DEBUG_BRIDGE*}]] \
                       -slaves $cl_ila_cells

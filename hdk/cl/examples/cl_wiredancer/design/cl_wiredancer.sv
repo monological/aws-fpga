@@ -280,73 +280,61 @@ end
 // Minimal AXI handling for DMA PCIS writes
 ////////////////////////////////////////////////////////////////////////
 
-assign cl_sh_dma_pcis_awready = 1'b1;
-assign cl_sh_dma_pcis_wready  = 1'b1;
-assign cl_sh_dma_pcis_bresp   = 2'b00;
+logic [1-1:0]                                st_addr_v;
+logic [3-1:0]                                st_data_v;
+logic [2-1:0]                                st_v;
+logic [1-1:0]                                st_p;
+logic [64-1:0]                               st_addr;
+logic [2-1:0][256-1:0]                        st_data;
 
-// We ack the write once we see wlast
-always_ff @(posedge clk) begin
-    if (rst) begin
-        cl_sh_dma_pcis_bvalid <= 1'b0;
-        cl_sh_dma_pcis_bid    <= 4'b0;
-    else
-        cl_sh_dma_pcis_bvalid <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
-        cl_sh_dma_pcis_bid    <= sh_cl_dma_pcis_awid;
-    end
-end
+assign cl_sh_dma_pcis_awready                   = 1'b1;
+assign cl_sh_dma_pcis_wready                    = 1'b1;
+assign cl_sh_dma_pcis_bresp                     = '0;
 
-// FIFO that holds addresses from AW channel:
-logic st_addr_v;
-wire st_p;
-logic [63:0] st_addr;
-logic st_v;
-assign st_v = st_addr_v & st_data_v;
+always_ff @(posedge clk) cl_sh_dma_pcis_bvalid   <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
+always_ff @(posedge clk) cl_sh_dma_pcis_bid      <= sh_cl_dma_pcis_awid;
 
 showahead_fifo #(
-    .WIDTH(64),
-    .DEPTH(32)
+    .WIDTH                              ($bits(sh_cl_dma_pcis_awaddr)),
+    .DEPTH                              (32)
 ) st_in_addr_fifo_inst (
-    .aclr      (rst),
-    .wr_clk    (clk),
-    .wr_req    (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
-    .wr_full   (),
-    .wr_data   ({sh_cl_dma_pcis_awaddr}),
+    .aclr                               (rst),
 
-    .rd_clk    (clk),
-    .rd_req    (st_p),
-    .rd_empty  (),
-    .rd_not_empty(st_addr_v),
-    .rd_count  (),
-    .rd_data   (st_addr)
+    .wr_clk                             (clk),
+    .wr_req                             (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
+    .wr_full                            (),
+    .wr_data                            ({sh_cl_dma_pcis_awaddr[64-1:6], 6'h0}),
+
+    .rd_clk                             (clk),
+    .rd_req                             (st_p),
+    .rd_empty                           (),
+    .rd_not_empty                       (st_addr_v),
+    .rd_count                           (),
+    .rd_data                            ({st_addr})
 );
-
-// FIFO that holds the W data+strobe
-// Notice we changed [32] to [31] (top bit) to avoid out-of-range indexing
-logic        st_data_v;
-logic [255:0] st_data;
-logic [31:0]  st_data_strb;
-logic         st_data_fifo_wr_full;
-logic [5:0]   st_data_fifo_rd_count;
 
 showahead_fifo #(
-    .WIDTH(288),
-    .DEPTH(32)
+    .WIDTH                              ($bits({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[32], sh_cl_dma_pcis_wstrb[0]})),
+    .DEPTH                              (32)
 ) st_in_data_fifo_inst (
-    .aclr        (rst),
-    .wr_clk      (clk),
-    .wr_req      (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
-    .wr_full     (st_data_fifo_wr_full),
-    .wr_data     ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb}),
+    .aclr                               (rst),
 
-    .rd_clk      (clk),
-    .rd_req      (st_p),
-    .rd_empty    (),  // optional dummy if unused
-    .rd_not_empty(st_data_v),
-    .rd_count    (st_data_fifo_rd_count),
-    .rd_data     ({st_data, st_data_strb})
+    .wr_clk                             (clk),
+    .wr_req                             (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
+    .wr_full                            (),
+    .wr_data                            ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[32], sh_cl_dma_pcis_wstrb[0]}),
+
+    .rd_clk                             (clk),
+    .rd_req                             (st_p),
+    .rd_empty                           (),
+    .rd_not_empty                       (st_data_v[2]),
+    .rd_count                           (),
+    .rd_data                            ({st_data, st_data_v[0+:2]})
 );
 
-assign st_p = st_addr_v & st_data_v;
+assign st_p                             = st_addr_v & st_data_v[2];
+assign st_v[0]                          = st_addr_v & st_data_v[2] & st_data_v[0];
+assign st_v[1]                          = st_addr_v & st_data_v[2] & st_data_v[1];
 
 ////////////////////////////////////////////////////////////////////////
 // Minimal bridging to PCIM master interface

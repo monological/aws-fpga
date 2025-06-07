@@ -15,7 +15,7 @@
 # limitations under the License.
 # =============================================================================
 
-# Level 1 CL_DRAM_HBM_DMA floorplan for Small Shell
+# Level 1 Wiredancer floorplan for Small Shell
 
 
 ###############################################################################
@@ -121,11 +121,6 @@ add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filte
 add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/st_ocl*}]
 add_cells_to_pblock [get_pblocks pblock_CL_SLR1] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/avmm_fh_*}]
 
-# DDR ready logic (just a logic tie-off)
-add_cells_to_pblock [get_pblocks pblock_CL_SLR2] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/ddr_ready}]
-
-# HBM logic (if applicable in design; optional if not used)
-add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/hbm_ready}]
 
 # Monitoring/status (vdip, vled, bresp_status)
 add_cells_to_pblock [get_pblocks pblock_CL_SLR0] [get_cells -hierarchical -filter {NAME =~ WRAPPER/CL/cl_wiredancer/vdip_*}]

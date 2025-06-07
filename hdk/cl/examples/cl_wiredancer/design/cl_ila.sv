@@ -16,7 +16,7 @@
 // ============================================================================
 
 
-module cl_ila #( parameter DDR_A_PRESENT = 1) (
+module cl_ila (
 
    input aclk,
 

@@ -21,18 +21,11 @@
 //=============================================================================
 
 module cl_wiredancer
-#(
-  parameter EN_DDR = 0,
-  parameter EN_HBM = 0
-)
 (
     `include "cl_ports.vh"
 );
 
 `include "cl_id_defines.vh"       // Defines for ID0 and ID1 (PCI ID's)
-`include "cl_dram_dma_defines.vh"
-
-`include "unused_ddr_template.inc"
 `include "unused_cl_sda_template.inc"
 `include "unused_apppf_irq_template.inc"
 
@@ -66,10 +59,7 @@ module cl_wiredancer
   assign cl_sh_id0[31:0] = `CL_SH_ID0;
   assign cl_sh_id1[31:0] = `CL_SH_ID1;
 
-  // Because the code references ddr_ready/hbm_ready but never declared them:
-  logic ddr_ready, hbm_ready;
-  assign ddr_ready = (EN_DDR) ? 1'b1 : 1'b0;
-  assign hbm_ready = (EN_HBM) ? 1'b1 : 1'b0;
+
 
 ///////////////////////////////////////////////////////////////////////
 // Clock and Reset synchronizers
@@ -137,7 +127,6 @@ localparam NO_AVMM_MASTERS = 1;
 localparam NO_BASE_ENGINES = 1;
 localparam NO_DBG_TAPS     = 1;
 localparam DBG_WIDTH       = 1024*2;
-localparam DDR_SIM         = 0;
 
 // Debug wires for demonstration
 logic [NO_DBG_TAPS-1:0][DBG_WIDTH-1:0]  dbg_wires;
@@ -496,9 +485,6 @@ assign cl_sh_pcim_wvalid  = pcim_wvalid;
 
 
 cl_ila
-  #(
-    .DDR_A_PRESENT          (`DDR_A_PRESENT           )
-  )
   CL_ILA
   (
     .aclk                   (clk_main_a0              ),

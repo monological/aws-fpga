@@ -350,7 +350,6 @@ logic [255:0] dma_push_data;  // 256-bit data chunk
 // FIFO Handshake Logic
 // --------------------------------------------------------------------
 logic        pcim_awvalid, pcim_wvalid;
-logic        pcim_fifo_dequeue;
 logic [63:0] pcim_awaddr;
 logic [255:0] pcim_wdata_half;
 
@@ -368,7 +367,6 @@ assign cl_sh_pcim_wid     = 16'b0;
 assign cl_sh_pcim_wlast   = 1'b1;
 assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
 assign cl_sh_pcim_wdata   = {2{pcim_wdata_half}};  // Duplicate 256b to 512b
-assign cl_sh_pcim_wstrb   = 64'hFFFFFFFFFFFFFFFF;  // Required: full 512-bit write
 
 // --------------------------------------------------------------------
 // FIFO Instances
@@ -384,7 +382,7 @@ showahead_fifo #(
     .wr_full       (dma_addr_fifo_full),
     .wr_data       (dma_push_addr),
     .rd_clk        (clk),
-    .rd_req        (pcim_fifo_dequeue),
+    .rd_req        (cl_sh_pcim_awvalid & cl_sh_pcim_awready),
     .rd_empty      (),
     .rd_not_empty  (pcim_awvalid),
     .rd_count      (),
@@ -392,7 +390,7 @@ showahead_fifo #(
 );
 
 showahead_fifo #(
-    .WIDTH(256),
+    .WIDTH(256+64),
     .FULL_THRESH(512-64),
     .DEPTH(512)
 ) dma_data_fifo_inst (
@@ -402,23 +400,19 @@ showahead_fifo #(
     .wr_full       (dma_data_fifo_full),
     .wr_full_b     (),
     .wr_count      (),
-    .wr_data       (dma_push_data),
+    .wr_data       ({dma_push_wstrb, dma_push_data}),
     .rd_clk        (clk),
-    .rd_req        (pcim_fifo_dequeue),
+    .rd_req        (cl_sh_pcim_wvalid & cl_sh_pcim_wready),
     .rd_empty      (),
     .rd_not_empty  (pcim_wvalid),
     .rd_count      (),
-    .rd_data       (pcim_wdata_half)
+    .rd_data       ({cl_sh_pcim_wstrb, pcim_wdata_half})
 );
 
 // --------------------------------------------------------------------
 // Push logic from staging FIFO to PCIM write pipeline
 // --------------------------------------------------------------------
-assign dma_push_ready     = ~dma_addr_fifo_full & ~dma_data_fifo_full;
-
-// Dequeue only when both AW and W channels are ready
-assign pcim_fifo_dequeue = pcim_awvalid && pcim_wvalid &&
-                           sh_cl_pcim_awready && sh_cl_pcim_wready;
+assign dma_push_ready     = (~dma_addr_fifo_full) & (~dma_data_fifo_full);
 
 // Drive PCIM AXI4 valid signals
 assign cl_sh_pcim_awvalid = pcim_awvalid;

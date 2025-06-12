@@ -381,10 +381,23 @@ generate
             .rst                        (rst_r[1])
         );
 
+        (* dont_touch = "yes" *) piped_wire #(
+            .WIDTH                                      ($bits({ext_v[g_i], ext_m0[g_i].m.m.tid})),
+            .DEPTH                                      (20)
+        ) sha_i_pipe_inst (
+            .in                                         ({ext_v[g_i], ext_m0[g_i].m.m.tid}),
+            .out                                        ({res_o_v[g_i], res_o_t[g_i]}),
+
+            .clk                                        (clk),
+            .reset                                      (rst)
+        );
+
         always_ff@(posedge clk) begin
-            res_o_v             [g_i]   <= ecc_o_v & (ecc_o_m.m.src[0+:4] == g_i);
-            res_o_t             [g_i]   <= ecc_o_m.m.tid;
-            res_o_d             [g_i]   <= ecc_o_m.res;
+//            res_o_v             [g_i]   <= ecc_o_v & (ecc_o_m.m.src[0+:4] == g_i);
+//            res_o_t             [g_i]   <= ecc_o_m.m.tid;
+//            res_o_d             [g_i]   <= ecc_o_m.res;
+//        end
+            res_o_d             [g_i]   <= 0;
         end
 
     end
@@ -456,6 +469,7 @@ dma_result #(
 // P::::::::P           A:::::A                 A:::::A D::::::::::::DDD     
 // PPPPPPPPPP          AAAAAAA                   AAAAAAADDDDDDDDDDDDD        
 
+/*
 rrb_merge #(
     .W                                          ($bits(ext_m0[0])),
     .N                                          (PCIE_N)
@@ -500,6 +514,7 @@ sha512_pre #(
     .clk                                        (clk),
     .rst                                        (rst)
 );
+*/
 
 //    SSSSSSSSSSSSSSS HHHHHHHHH     HHHHHHHHH               AAA               
 //  SS:::::::::::::::SH:::::::H     H:::::::H              A:::A              
@@ -518,6 +533,7 @@ sha512_pre #(
 // S:::::::::::::::SS H:::::::H     H:::::::H A:::::A                 A:::::A 
 //  SSSSSSSSSSSSSSS   HHHHHHHHH     HHHHHHHHHAAAAAAA                   AAAAAAA
 
+/*
 (* dont_touch = "yes" *) piped_wire #(
     .WIDTH                                      ($bits({sha_f_f, pad_o_m, pad_o_e, pad_o_v})),
     .DEPTH                                      (2)
@@ -580,6 +596,7 @@ sha512_pre #(
     .clk                                        (clk),
     .rst                                        (rst)
 );
+*/
 
 //    SSSSSSSSSSSSSSS VVVVVVVV           VVVVVVVV     000000000     
 //  SS:::::::::::::::SV::::::V           V::::::V   00:::::::::00   
@@ -598,6 +615,7 @@ sha512_pre #(
 // S:::::::::::::::SS            V:::V              00:::::::::00   
 //  SSSSSSSSSSSSSSS               VVV                 000000000     
 
+/*
 (* dont_touch = "yes" *) piped_wire #(
     .WIDTH                                      ($bits({sv0_f_f, sha_o_m, sha_o_v})),
     .DEPTH                                      (2)
@@ -657,6 +675,7 @@ sha512_pre #(
     .clk                                        (clk),
     .rst                                        (rst)
 );
+*/
 
 //    SSSSSSSSSSSSSSS VVVVVVVV           VVVVVVVV  1111111   
 //  SS:::::::::::::::SV::::::V           V::::::V 1::::::1   
@@ -675,6 +694,7 @@ sha512_pre #(
 // S:::::::::::::::SS            V:::V           1::::::::::1
 //  SSSSSSSSSSSSSSS               VVV            111111111111
 
+/*
 (* dont_touch = "yes" *) piped_wire #(
     .WIDTH                                      ($bits({sv1_f_f, sv0_o_m, sv0_o_v})),
     .DEPTH                                      (2)
@@ -734,6 +754,7 @@ sha512_pre #(
     .clk                                        (clk_f),
     .rst                                        (rst_f_r[1])
 );
+*/
 
 //    SSSSSSSSSSSSSSS VVVVVVVV           VVVVVVVV 222222222222222    
 //  SS:::::::::::::::SV::::::V           V::::::V2:::::::::::::::22  
@@ -752,6 +773,7 @@ sha512_pre #(
 // S:::::::::::::::SS            V:::V           2::::::::::::::::::2
 //  SSSSSSSSSSSSSSS               VVV            22222222222222222222
 
+/*
 (* dont_touch = "yes" *) piped_wire #(
     .WIDTH                                      ($bits({sv2_f_f, sv1_o_m, sv1_o_v})),
     .DEPTH                                      (2)
@@ -808,6 +830,7 @@ sha512_pre #(
     .clk                                        (clk),
     .reset                                      (rst)
 );
+*/
 
 
 

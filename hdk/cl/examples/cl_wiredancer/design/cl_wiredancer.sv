@@ -38,20 +38,6 @@ module cl_wiredancer
   assign cl_sh_dma_rd_full  = 'b0;
   assign cl_sh_dma_wr_full  = 'b0;
 
-  assign cl_sh_pcim_awuser  = 'b0;
-  assign cl_sh_pcim_aruser  = 'b0;
-  assign cl_sh_pcim_arid    = 16'b0;
-  assign cl_sh_pcim_araddr  = 64'b0;
-  assign cl_sh_pcim_arlen   = 8'b0;
-  assign cl_sh_pcim_arsize  = 3'b0;
-  assign cl_sh_pcim_arburst = 2'b0;
-  assign cl_sh_pcim_arcache = 4'b0;
-  assign cl_sh_pcim_arlock  = 1'b0;
-  assign cl_sh_pcim_arprot  = 3'b0;
-  assign cl_sh_pcim_arqos   = 4'b0;
-  assign cl_sh_pcim_arvalid = 1'b0;
-  assign cl_sh_pcim_rready  = 1'b0;
-
   assign cl_sh_status0      = 'b0;
   assign cl_sh_status1      = 'b0;
   assign cl_sh_status2      = 'b0;
@@ -346,16 +332,22 @@ logic        dma_addr_fifo_full, dma_data_fifo_full;
 logic [63:0] dma_push_addr;   // addresses
 logic [63:0] dma_push_wstrb;  // unused (WSTRB not needed now)
 logic [255:0] dma_push_data;  // 256-bit data chunk
-
-// --------------------------------------------------------------------
-// FIFO Handshake Logic
-// --------------------------------------------------------------------
-logic        pcim_awvalid, pcim_wvalid;
-logic [63:0] pcim_awaddr;
 logic [255:0] pcim_wdata_half;
 
-// --------------------------------------------------------------------
-// AXI4 Master Interface (static fields)
+assign cl_sh_pcim_awuser  = 'b0;
+assign cl_sh_pcim_aruser  = 'b0;
+assign cl_sh_pcim_arid    = 16'b0;
+assign cl_sh_pcim_araddr  = 64'b0;
+assign cl_sh_pcim_arlen   = 8'b0;
+assign cl_sh_pcim_arsize  = 3'b0;
+assign cl_sh_pcim_arburst = 2'b0;
+assign cl_sh_pcim_arcache = 4'b0;
+assign cl_sh_pcim_arlock  = 1'b0;
+assign cl_sh_pcim_arprot  = 3'b0;
+assign cl_sh_pcim_arqos   = 4'b0;
+assign cl_sh_pcim_arvalid = 1'b0;
+assign cl_sh_pcim_rready  = 1'b0;
+
 assign cl_sh_pcim_awid    = 4'b0000;
 assign cl_sh_pcim_awlen   = 8'b0;
 assign cl_sh_pcim_awsize  = 3'b110;
@@ -369,6 +361,8 @@ assign cl_sh_pcim_wlast   = 1'b1;
 assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
 assign cl_sh_pcim_wdata   = {2{pcim_wdata_half}};  // Duplicate 256b to 512b
 
+assign dma_push_ready     = (~dma_addr_fifo_full) & (~dma_data_fifo_full);
+
 // --------------------------------------------------------------------
 // FIFO Instances
 // --------------------------------------------------------------------
@@ -378,16 +372,18 @@ showahead_fifo #(
     .DEPTH(512)
 ) dma_addr_fifo_inst (
     .aclr          (rst),
+
     .wr_clk        (clk),
     .wr_req        (dma_push_valid & dma_push_ready),
     .wr_full       (dma_addr_fifo_full),
-    .wr_data       (dma_push_addr),
+    .wr_data       ({dma_push_addr}),
+
     .rd_clk        (clk),
     .rd_req        (cl_sh_pcim_awvalid & cl_sh_pcim_awready),
     .rd_empty      (),
-    .rd_not_empty  (pcim_awvalid),
+    .rd_not_empty  (cl_sh_pcim_awvalid),
     .rd_count      (),
-    .rd_data       (pcim_awaddr)
+    .rd_data       ({cl_sh_pcim_awaddr})
 );
 
 showahead_fifo #(
@@ -396,30 +392,22 @@ showahead_fifo #(
     .DEPTH(512)
 ) dma_data_fifo_inst (
     .aclr          (rst),
+
     .wr_clk        (clk),
     .wr_req        (dma_push_valid & dma_push_ready),
     .wr_full       (dma_data_fifo_full),
-    .wr_full_b     (),
-    .wr_count      (),
     .wr_data       ({dma_push_wstrb, dma_push_data}),
+
     .rd_clk        (clk),
     .rd_req        (cl_sh_pcim_wvalid & cl_sh_pcim_wready),
     .rd_empty      (),
-    .rd_not_empty  (pcim_wvalid),
+    .rd_not_empty  (cl_sh_pcim_wvalid),
     .rd_count      (),
-    .rd_data       ({cl_sh_pcim_wstrb, pcim_wdata_half})
+    .rd_data       ({cl_sh_pcim_wstrb, pcim_wdata_half}),
+
+    .wr_full_b     (),
+    .wr_count      ()
 );
-
-// --------------------------------------------------------------------
-// Push logic from staging FIFO to PCIM write pipeline
-// --------------------------------------------------------------------
-assign dma_push_ready     = (~dma_addr_fifo_full) & (~dma_data_fifo_full);
-
-// Drive PCIM AXI4 valid signals
-assign cl_sh_pcim_awvalid = pcim_awvalid;
-assign cl_sh_pcim_awaddr  = pcim_awaddr;
-assign cl_sh_pcim_wvalid  = pcim_wvalid;
-
 
 ////////////////////////////////////////////////////////////////////////
 // Example “top_f2” instance (from your snippet)

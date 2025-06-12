@@ -707,7 +707,7 @@ sha512_pre #(
     .rd_data                                    (sv1_i_m)
 );
 
-(* keep_hierarchy = "yes" *) ed25519_sigverify_1 #(
+(* keep_hierarchy = "yes" *) ed25519_sigverify_1_passthrough #(
     .DSDP_WS                                    (DSDP_WS),
     .MUL_T                                      (MUL_T),
     .MUL_D                                      (MUL_D),
@@ -784,7 +784,7 @@ sha512_pre #(
     .rd_data                                    (sv2_i_m)
 );
 
-(* keep_hierarchy = "yes" *) ed25519_sigverify_2 #(
+(* keep_hierarchy = "yes" *) ed25519_sigverify_2_passthrough #(
     .MUL_T                                      (MUL_T)
 ) ed25519_sigverify_2_inst (
     .i_r                                        (sv2_i_r),

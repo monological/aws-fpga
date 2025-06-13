@@ -109,6 +109,7 @@ end
 
 // The top-level includes are parameterizable.  For brevity, we keep the code:
 localparam DMA_N         = 1;
+localparam PCIE_N        = 1;
 localparam NO_AVMM_MASTERS = 1;
 localparam NO_BASE_ENGINES = 1;
 localparam NO_DBG_TAPS     = 1;
@@ -258,7 +259,6 @@ always_ff @(posedge clk_main_a0) begin
     end
 
     cl_sh_status_vled <= { vdip_bytes[vdip_sel], vdip_sel, vdip_func };
-    vdip_bytes[15] <= bresp_status;
 end
 
 
@@ -419,7 +419,8 @@ showahead_fifo #(
 
 `TOP_NAME #(
   .DBG_WIDTH(DBG_WIDTH),
-  .DMA_N     (DMA_N)
+  .DMA_N     (DMA_N),
+  .PCIE_N    (PCIE_N)
 ) top_inst (
     .avmm_read         (avmm_fh_read [0]),
     .avmm_write        (avmm_fh_write[0]),

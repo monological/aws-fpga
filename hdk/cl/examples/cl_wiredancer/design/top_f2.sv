@@ -39,7 +39,8 @@ module top_f2 #(
     TH_SV2                                              = {12'h0, 12'd200, 12'd200},
 
     DBG_WIDTH = 1024,
-    DMA_N = 2
+    DMA_N = 2,
+    N_PCIE = 2
 ) (
 
     input wire [1-1:0]                                  avmm_read,

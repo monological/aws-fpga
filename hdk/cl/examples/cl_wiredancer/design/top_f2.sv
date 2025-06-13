@@ -40,7 +40,7 @@ module top_f2 #(
 
     DBG_WIDTH = 1024,
     DMA_N = 2,
-    N_PCIE = 2
+    PCIE_N = 2
 ) (
 
     input wire [1-1:0]                                  avmm_read,
@@ -92,16 +92,16 @@ logic [4-1:0][36-1:0]                   ths = {
 
 localparam int PCIE_L_WIDTH = $clog2(1024) + 1;
 
-logic [1-1:0]                           pcie_iv     [N_PCIE-1:0];
-logic [1-1:0]                           pcie_if     [N_PCIE-1:0];
-logic [PCIE_L_WIDTH-1:0]                pcie_il [N_PCIE-1:0];
-logic [512-1:0]                         pcie_id     [N_PCIE-1:0];
+logic [1-1:0]                           pcie_iv     [PCIE_N-1:0];
+logic [1-1:0]                           pcie_if     [PCIE_N-1:0];
+logic [PCIE_L_WIDTH-1:0]                pcie_il [PCIE_N-1:0];
+logic [512-1:0]                         pcie_id     [PCIE_N-1:0];
 
-logic [N_PCIE-1:0][1-1:0]               ext_r;
-logic [N_PCIE-1:0][1-1:0]               ext_v;
-logic [N_PCIE-1:0][1-1:0]               ext_e;
-sv_meta2_t [N_PCIE-1:0]                 ext_m0;
-pcie_meta_t [N_PCIE-1:0]                ext_m1;
+logic [PCIE_N-1:0][1-1:0]               ext_r;
+logic [PCIE_N-1:0][1-1:0]               ext_v;
+logic [PCIE_N-1:0][1-1:0]               ext_e;
+sv_meta2_t [PCIE_N-1:0]                 ext_m0;
+pcie_meta_t [PCIE_N-1:0]                ext_m1;
 
 logic [1-1:0]                           pad_i_r;
 logic [1-1:0]                           pad_i_w;
@@ -169,19 +169,19 @@ sv_meta7_t                              sv2_o_m;
 logic [1-1:0]                           ecc_o_v;
 sv_meta7_t                              ecc_o_m;
 
-logic [N_PCIE-1:0][1-1:0]               res_o_v;
-logic [N_PCIE-1:0][64-1:0]              res_o_t;
-logic [N_PCIE-1:0][1-1:0]               res_o_d;
-logic [N_PCIE-1:0][16-1:0]              res_o_c;
-logic [N_PCIE-1:0][1-1:0]               res_o_f;
-logic [N_PCIE-1:0][1-1:0]               res_o_p;
+logic [PCIE_N-1:0][1-1:0]               res_o_v;
+logic [PCIE_N-1:0][64-1:0]              res_o_t;
+logic [PCIE_N-1:0][1-1:0]               res_o_d;
+logic [PCIE_N-1:0][16-1:0]              res_o_c;
+logic [PCIE_N-1:0][1-1:0]               res_o_f;
+logic [PCIE_N-1:0][1-1:0]               res_o_p;
 
-logic [N_PCIE-1:0][1-1:0]               dma_p_r;
-logic [N_PCIE-1:0][1-1:0]               dma_p_v;
-logic [N_PCIE-1:0][1-1:0]               dma_p_vv;
-logic [N_PCIE-1:0][1-1:0]               dma_p_f;
-logic [N_PCIE-1:0][16-1:0]              dma_p_c;
-mcache_pcim_t [N_PCIE-1:0]              dma_p_dab;
+logic [PCIE_N-1:0][1-1:0]               dma_p_r;
+logic [PCIE_N-1:0][1-1:0]               dma_p_v;
+logic [PCIE_N-1:0][1-1:0]               dma_p_vv;
+logic [PCIE_N-1:0][1-1:0]               dma_p_f;
+logic [PCIE_N-1:0][16-1:0]              dma_p_c;
+mcache_pcim_t [PCIE_N-1:0]              dma_p_dab;
 
 
 
@@ -340,7 +340,7 @@ piped_pending #(
 
 generate
 
-    for (genvar g_i = 0; g_i < N_PCIE; g_i ++) begin: P_IN
+    for (genvar g_i = 0; g_i < PCIE_N; g_i ++) begin: P_IN
 
         localparam logic [64-1:0] PCIE_OFF = {32'h0000_0001 + g_i, 32'h0000_0000};
 
@@ -423,7 +423,7 @@ endgenerate
 // DDDDDDDDDDDDD        MMMMMMMM               MMMMMMMMAAAAAAA                   AAAAAAA
 
 dma_result #(
-    .N_PCIE                     (N_PCIE)
+    .PCIE_N                     (PCIE_N)
 ) dma_result_inst (
 
     .dma_push_ready             (dma_push_ready),
@@ -474,7 +474,7 @@ dma_result #(
 /*
 rrb_merge #(
     .W                                          ($bits(ext_m0[0])),
-    .N                                          (N_PCIE)
+    .N                                          (PCIE_N)
 ) ext_merge_inst (
     .i_r                                        (ext_r),
     .i_v                                        (ext_v),

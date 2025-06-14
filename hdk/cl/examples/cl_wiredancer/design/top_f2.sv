@@ -92,96 +92,96 @@ logic [4-1:0][36-1:0]                   ths = {
 
 localparam int PCIE_L_WIDTH = $clog2(1024) + 1;
 
-logic [1-1:0]                           pcie_iv     [PCIE_N-1:0];
-logic [1-1:0]                           pcie_if     [PCIE_N-1:0];
-logic [PCIE_L_WIDTH-1:0]                pcie_il [PCIE_N-1:0];
-logic [512-1:0]                         pcie_id     [PCIE_N-1:0];
+logic [1-1:0]                           pcie_input_valid     [PCIE_N-1:0];
+logic [1-1:0]                           pcie_input_full     [PCIE_N-1:0];
+logic [PCIE_L_WIDTH-1:0]                pcie_input_fill [PCIE_N-1:0];
+logic [512-1:0]                         pcie_input_data     [PCIE_N-1:0];
 
-logic [PCIE_N-1:0][1-1:0]               ext_r;
-logic [PCIE_N-1:0][1-1:0]               ext_v;
-logic [PCIE_N-1:0][1-1:0]               ext_e;
-sv_meta2_t [PCIE_N-1:0]                 ext_m0;
-pcie_meta_t [PCIE_N-1:0]                ext_m1;
+logic [PCIE_N-1:0][1-1:0]               ext_ready;
+logic [PCIE_N-1:0][1-1:0]               ext_valid;
+logic [PCIE_N-1:0][1-1:0]               ext_eop;
+sv_meta2_t [PCIE_N-1:0]                 ext_meta0;
+pcie_meta_t [PCIE_N-1:0]                ext_meta1;
 
-logic [1-1:0]                           pad_i_r;
-logic [1-1:0]                           pad_i_w;
-logic [1-1:0]                           pad_i_v;
-logic [1-1:0]                           pad_i_e;
-sv_meta2_t                              pad_i_m;
+logic [1-1:0]                           pad_input_ready;
+logic [1-1:0]                           pad_input_wait;
+logic [1-1:0]                           pad_input_valid;
+logic [1-1:0]                           pad_input_eop;
+sv_meta2_t                              pad_input_meta;
 
-logic [1-1:0]                           pad_o_v;
-logic [1-1:0]                           pad_o_e;
-sv_meta3_t                              pad_o_m;
-logic [10-1:0]                          pad_o_f;
+logic [1-1:0]                           pad_output_valid;
+logic [1-1:0]                           pad_output_eop;
+sv_meta3_t                              pad_output_meta;
+logic [10-1:0]                          pad_output_fill;
 
-logic [1-1:0]                           sha_f_v;
-logic [1-1:0]                           sha_f_e;
-sv_meta3_t                              sha_f_m;
-logic [10-1:0]                          sha_f_f;
+logic [1-1:0]                           sha_fifo_valid;
+logic [1-1:0]                           sha_fifo_eop;
+sv_meta3_t                              sha_fifo_meta;
+logic [10-1:0]                          sha_fifo_fill;
 
-logic [1-1:0]                           sha_i_r;
-logic [1-1:0]                           sha_i_w;
-logic [1-1:0]                           sha_i_v;
-logic [1-1:0]                           sha_i_e;
-sv_meta3_t                              sha_i_m;
+logic [1-1:0]                           sha_input_ready;
+logic [1-1:0]                           sha_input_wait;
+logic [1-1:0]                           sha_input_valid;
+logic [1-1:0]                           sha_input_eop;
+sv_meta3_t                              sha_input_meta;
 
-logic [1-1:0]                           sha_o_v;
-sv_meta4_t                              sha_o_m;
-logic [10-1:0]                          sha_o_f;
+logic [1-1:0]                           sha_output_valid;
+sv_meta4_t                              sha_output_meta;
+logic [10-1:0]                          sha_output_fill;
 
-logic [1-1:0]                           sv0_f_v;
-sv_meta4_t                              sv0_f_m;
-logic [10-1:0]                          sv0_f_f;
+logic [1-1:0]                           sv0_fifo_valid;
+sv_meta4_t                              sv0_fifo_meta;
+logic [10-1:0]                          sv0_fifo_fill;
 
-logic [1-1:0]                           sv0_i_r;
-logic [1-1:0]                           sv0_i_w;
-logic [1-1:0]                           sv0_i_v;
-sv_meta4_t                              sv0_i_m;
+logic [1-1:0]                           sv0_input_ready;
+logic [1-1:0]                           sv0_input_wait;
+logic [1-1:0]                           sv0_input_valid;
+sv_meta4_t                              sv0_input_meta;
 
-logic [1-1:0]                           sv0_o_v;
-sv_meta5_t                              sv0_o_m;
-logic [10-1:0]                          sv0_o_f;
+logic [1-1:0]                           sv0_output_valid;
+sv_meta5_t                              sv0_output_meta;
+logic [10-1:0]                          sv0_output_fill;
 
-logic [1-1:0]                           sv1_f_v;
-sv_meta5_t                              sv1_f_m;
-logic [10-1:0]                          sv1_f_f;
+logic [1-1:0]                           sv1_fifo_valid;
+sv_meta5_t                              sv1_fifo_meta;
+logic [10-1:0]                          sv1_fifo_fill;
 
-logic [1-1:0]                           sv1_i_r;
-logic [1-1:0]                           sv1_i_w;
-logic [1-1:0]                           sv1_i_v;
-sv_meta5_t                              sv1_i_m;
+logic [1-1:0]                           sv1_input_ready;
+logic [1-1:0]                           sv1_input_wait;
+logic [1-1:0]                           sv1_input_valid;
+sv_meta5_t                              sv1_input_meta;
 
-logic [1-1:0]                           sv1_o_v;
-sv_meta6_t                              sv1_o_m;
-logic [10-1:0]                          sv1_o_f;
+logic [1-1:0]                           sv1_output_valid;
+sv_meta6_t                              sv1_output_meta;
+logic [10-1:0]                          sv1_output_fill;
 
-logic [1-1:0]                           sv2_f_v;
-sv_meta6_t                              sv2_f_m;
-logic [10-1:0]                          sv2_f_f;
+logic [1-1:0]                           sv2_fifo_valid;
+sv_meta6_t                              sv2_fifo_meta;
+logic [10-1:0]                          sv2_fifo_fill;
 
-logic [1-1:0]                           sv2_i_r;
-logic [1-1:0]                           sv2_i_v;
-sv_meta6_t                              sv2_i_m;
+logic [1-1:0]                           sv2_input_ready;
+logic [1-1:0]                           sv2_input_valid;
+sv_meta6_t                              sv2_input_meta;
 
-logic [1-1:0]                           sv2_o_v;
-sv_meta7_t                              sv2_o_m;
+logic [1-1:0]                           sv2_output_valid;
+sv_meta7_t                              sv2_output_meta;
 
-logic [1-1:0]                           ecc_o_v;
-sv_meta7_t                              ecc_o_m;
+logic [1-1:0]                           ecc_output_valid;
+sv_meta7_t                              ecc_output_meta;
 
-logic [PCIE_N-1:0][1-1:0]               res_o_v;
-logic [PCIE_N-1:0][64-1:0]              res_o_t;
-logic [PCIE_N-1:0][1-1:0]               res_o_d;
-logic [PCIE_N-1:0][16-1:0]              res_o_c;
-logic [PCIE_N-1:0][1-1:0]               res_o_f;
-logic [PCIE_N-1:0][1-1:0]               res_o_p;
+logic [PCIE_N-1:0][1-1:0]               result_valid;
+logic [PCIE_N-1:0][64-1:0]              result_tid;
+logic [PCIE_N-1:0][1-1:0]               result_data;
+logic [PCIE_N-1:0][16-1:0]              result_count;
+logic [PCIE_N-1:0][1-1:0]               result_full;
+logic [PCIE_N-1:0][1-1:0]               result_push;
 
-logic [PCIE_N-1:0][1-1:0]               dma_p_r;
-logic [PCIE_N-1:0][1-1:0]               dma_p_v;
-logic [PCIE_N-1:0][1-1:0]               dma_p_vv;
-logic [PCIE_N-1:0][1-1:0]               dma_p_f;
-logic [PCIE_N-1:0][16-1:0]              dma_p_c;
-mcache_pcim_t [PCIE_N-1:0]              dma_p_dab;
+logic [PCIE_N-1:0][1-1:0]               dma_port_ready;
+logic [PCIE_N-1:0][1-1:0]               dma_port_valid;
+logic [PCIE_N-1:0][1-1:0]               dma_port_vv;
+logic [PCIE_N-1:0][1-1:0]               dma_port_full;
+logic [PCIE_N-1:0][16-1:0]              dma_port_count;
+mcache_pcim_t [PCIE_N-1:0]              dma_port_desc;
 
 
 
@@ -206,11 +206,11 @@ mcache_pcim_t [PCIE_N-1:0]              dma_p_dab;
 //  A:::::A                 A:::::A            V:::V           M::::::M               M::::::MM::::::M               M::::::M
 // AAAAAAA                   AAAAAAA            VVV            MMMMMMMM               MMMMMMMMMMMMMMMM               MMMMMMMM
 
-logic [8-1:0] w_i;
-logic [1-1:0] cnt_rst;
-logic [1-1:0] cnt_snp;
-logic [32-1:0][32-1:0] cnt = 0;
-logic [32-1:0][32-1:0] cnt_s;
+logic [8-1:0] reg_index;
+logic [1-1:0] counter_reset;
+logic [1-1:0] counter_snapshot;
+logic [32-1:0][32-1:0] counter_value = 0;
+logic [32-1:0][32-1:0] counter_snapshot_values;
 
 assign avmm_waitrequest = '0;
 
@@ -224,64 +224,64 @@ always_ff@(posedge clk) begin
         8'h00: avmm_readdata            <= 32'h5000_0000;
         8'h01: avmm_readdata            <= 32'h0002_0006;
 
-        8'h10: avmm_readdata            <= w_i;
+        8'h10: avmm_readdata            <= reg_index;
         8'h11: avmm_readdata            <= timestamp[0 +:32];
         8'h12: avmm_readdata            <= timestamp[32+:32];
 
-        8'h20: avmm_readdata            <= cnt_s[w_i];
-        8'h21: avmm_readdata            <= {tr_pending[0+:10], res_o_c[0][0+:10], pcie_il[0]};
-        8'h22: avmm_readdata            <= {tr_pending[0+:10], res_o_c[1][0+:10], pcie_il[1]};
+        8'h20: avmm_readdata            <= counter_snapshot_values[reg_index];
+        8'h21: avmm_readdata            <= {tr_pending[0+:10], result_count[0][0+:10], pcie_input_fill[0]};
+        8'h22: avmm_readdata            <= {tr_pending[0+:10], result_count[1][0+:10], pcie_input_fill[1]};
     endcase
 
     if (avmm_write) begin
     case (avmm_address[2+:8])
 
-        8'h10: w_i                      <= avmm_writedata;
+        8'h10: reg_index                      <= avmm_writedata;
         8'h11: send_fails               <= avmm_writedata;
         8'h13: ths_msb                  <= avmm_writedata;
-        8'h14: ths[w_i]                 <= {ths_msb, avmm_writedata};
+        8'h14: ths[reg_index]                 <= {ths_msb, avmm_writedata};
 
         8'h20: begin
-            cnt_snp                     <= avmm_writedata[1];
-            cnt_rst                     <= avmm_writedata[0];
+            counter_snapshot                     <= avmm_writedata[1];
+            counter_reset                     <= avmm_writedata[0];
         end
 
     endcase
     end else begin
-        cnt_rst                         <= 0;
-        cnt_snp                         <= 0;
+        counter_reset                         <= 0;
+        counter_snapshot                         <= 0;
     end
 end
 
-`define CNT(ci, expr)       piped_counter #(.D(2),.W(32)) cntr_``ci`` (.clk(clk), .rst(rst), .c(cnt_s[ci]), .p(expr), .r(cnt_rst), .s(cnt_snp));
-`define CNM(ci, expr, c)    always_ff@(posedge clk) begin if (cnt_snp) cnt_s[ci] <= cnt[ci]; cnt[ci] <= (cnt_rst) ? '0 : cnt[ci] + ((expr) ? c : 0); end
-`define MON(ci, expr)       always_ff@(posedge clk) begin if (cnt_snp) cnt_s[ci] <= cnt[ci]; cnt[ci] <= (expr); end
+`define CNT(ci, expr)       piped_counter #(.D(2),.W(32)) cntr_``ci`` (.clk(clk), .rst(rst), .c(counter_snapshot_values[ci]), .p(expr), .r(counter_reset), .s(counter_snapshot));
+`define CNM(ci, expr, c)    always_ff@(posedge clk) begin if (counter_snapshot) counter_snapshot_values[ci] <= counter_value[ci]; counter_value[ci] <= (counter_reset) ? '0 : counter_value[ci] + ((expr) ? c : 0); end
+`define MON(ci, expr)       always_ff@(posedge clk) begin if (counter_snapshot) counter_snapshot_values[ci] <= counter_value[ci]; counter_value[ci] <= (expr); end
 
-`CNT( 0, pad_i_v & pad_i_r & pad_i_e)
-`CNT( 1, pad_o_v & pad_o_e)
-`CNT( 2, sha_o_v)
-`CNT( 3, sv0_o_v)
-`CNT( 4, sv2_f_v) // sv1_o_v is in clk_f domain
-`CNT( 5, sv2_o_v)
-`CNT( 6, ecc_o_v)
+`CNT( 0, pad_input_valid & pad_input_ready & pad_input_eop)
+`CNT( 1, pad_output_valid & pad_output_eop)
+`CNT( 2, sha_output_valid)
+`CNT( 3, sv0_output_valid)
+`CNT( 4, sv2_fifo_valid) // sv1_output_valid is in clk_f domain
+`CNT( 5, sv2_output_valid)
+`CNT( 6, ecc_output_valid)
 
 `MON( 7, tr_pending)
 
-`CNT(10, pcie_iv[0])                    // input count
-`MON(11, pcie_il[0])                    // input fill
-`CNT(12, pcie_iv[0] & pcie_if[0])       // input drops
-`CNT(13, res_o_v[0])                    // result count
-`MON(14, res_o_c[0])                    // result fill
-`CNT(15, res_o_v[0] & res_o_f[0])       // result drops
-`CNT(16, res_o_p[0])                    // result dma count
+`CNT(10, pcie_input_valid[0])                    // input count
+`MON(11, pcie_input_fill[0])                    // input fill
+`CNT(12, pcie_input_valid[0] & pcie_input_full[0])       // input drops
+`CNT(13, result_valid[0])                    // result count
+`MON(14, result_count[0])                    // result fill
+`CNT(15, result_valid[0] & result_full[0])       // result drops
+`CNT(16, result_push[0])                    // result dma count
 
-`CNT(20, pcie_iv[1])                    // input count
-`MON(21, pcie_il[1])                    // input fill
-`CNT(22, pcie_iv[1] & pcie_if[1])       // input drops
-`CNT(23, res_o_v[1])                    // result count
-`MON(24, res_o_c[1])                    // result fill
-`CNT(25, res_o_v[1] & res_o_f[1])       // result drops
-`CNT(26, res_o_p[1])                    // result dma count
+`CNT(20, pcie_input_valid[1])                    // input count
+`MON(21, pcie_input_fill[1])                    // input fill
+`CNT(22, pcie_input_valid[1] & pcie_input_full[1])       // input drops
+`CNT(23, result_valid[1])                    // result count
+`MON(24, result_count[1])                    // result fill
+`CNT(25, result_valid[1] & result_full[1])       // result drops
+`CNT(26, result_push[1])                    // result dma count
 
 `undef CNT
 `undef CNM
@@ -291,8 +291,8 @@ piped_pending #(
     .W(32),
     .D(2)
 ) tr_pending_pending (
-    .u(pad_i_v & pad_i_r & pad_i_e),
-    .d(ecc_o_v),
+    .u(pad_input_valid & pad_input_ready & pad_input_eop),
+    .d(ecc_output_valid),
     .p(tr_pending),
     .clk(clk),
     .rst(rst)
@@ -355,10 +355,10 @@ generate
             .pcie_a                     (pcie_a),
             .pcie_d                     (pcie_d),
 
-            .out_v                      (pcie_iv[g_i]),
+            .out_v                      (pcie_input_valid[g_i]),
             .out_p                      ('1),
             .out_a                      (),
-            .out_d                      (pcie_id[g_i]),
+            .out_d                      (pcie_input_data[g_i]),
             .out_s                      (),
 
             .clk                        (clk),
@@ -368,38 +368,38 @@ generate
         pcie_tr_ext #(
             .BUFF_SZ                    (EXT_BUFFER_SZ)
         ) tr_ext_inst (
-            .pcie_v                     (pcie_iv        [g_i]),
-            .pcie_d                     (pcie_id        [g_i]),
-            .pcie_f                     (pcie_if        [g_i]), // full
-            .pcie_l                     (pcie_il        [g_i]), // fill
+            .pcie_v                     (pcie_input_valid        [g_i]),
+            .pcie_d                     (pcie_input_data        [g_i]),
+            .pcie_f                     (pcie_input_full        [g_i]), // full
+            .pcie_l                     (pcie_input_fill        [g_i]), // fill
 
-            .o_v                        (ext_v          [g_i]),
-            .o_r                        (ext_r          [g_i]),
-            .o_e                        (ext_e          [g_i]),
-            .o_m0                       (ext_m0         [g_i]),
-            .o_m1                       (ext_m1         [g_i]),
+            .o_v                        (ext_valid          [g_i]),
+            .o_r                        (ext_ready          [g_i]),
+            .o_e                        (ext_eop          [g_i]),
+            .o_m0                       (ext_meta0         [g_i]),
+            .o_m1                       (ext_meta1         [g_i]),
 
             .clk                        (clk),
             .rst                        (rst_r[1])
         );
 
         (* dont_touch = "yes" *) piped_wire #(
-            .WIDTH                                      ($bits({ext_v[g_i], ext_m0[g_i].m.m.tid})),
+            .WIDTH                                      ($bits({ext_valid[g_i], ext_meta0[g_i].m.m.tid})),
             .DEPTH                                      (20)
         ) sha_i_pipe_inst (
-            .in                                         ({ext_v[g_i], ext_m0[g_i].m.m.tid}),
-            .out                                        ({res_o_v[g_i], res_o_t[g_i]}),
+            .in                                         ({ext_valid[g_i], ext_meta0[g_i].m.m.tid}),
+            .out                                        ({result_valid[g_i], result_tid[g_i]}),
 
             .clk                                        (clk),
             .reset                                      (rst)
         );
 
         always_ff@(posedge clk) begin
-//            res_o_v             [g_i]   <= ecc_o_v & (ecc_o_m.m.src[0+:4] == g_i);
-//            res_o_t             [g_i]   <= ecc_o_m.m.tid;
-//            res_o_d             [g_i]   <= ecc_o_m.res;
+//            result_valid             [g_i]   <= ecc_output_valid & (ecc_output_meta.m.src[0+:4] == g_i);
+//            result_tid             [g_i]   <= ecc_output_meta.m.tid;
+//            result_data             [g_i]   <= ecc_output_meta.res;
 //        end
-            res_o_d             [g_i]   <= 0;
+            result_data             [g_i]   <= 0;
         end
 
     end
@@ -433,17 +433,17 @@ dma_result #(
     .dma_fifo_full              (dma_fifo_full),
     .dma_push_data              (dma_push_data),
 
-    .ext_v                      (ext_v),
-    .ext_r                      (ext_r),
-    .ext_e                      (ext_e),
-    .ext_m                      (ext_m1),
+    .ext_v                      (ext_valid),
+    .ext_r                      (ext_ready),
+    .ext_e                      (ext_eop),
+    .ext_m                      (ext_meta1),
 
-    .res_v                      (res_o_v),
-    .res_t                      (res_o_t),
-    .res_d                      (res_o_d),
-    .res_c                      (res_o_c),
-    .res_f                      (res_o_f),
-    .res_p                      (res_o_p),
+    .res_v                      (result_valid),
+    .res_t                      (result_tid),
+    .res_d                      (result_data),
+    .res_c                      (result_count),
+    .res_f                      (result_full),
+    .res_p                      (result_push),
 
     .send_fails                 (send_fails),
 
@@ -473,18 +473,18 @@ dma_result #(
 
 /*
 rrb_merge #(
-    .W                                          ($bits(ext_m0[0])),
+    .W                                          ($bits(ext_meta0[0])),
     .N                                          (PCIE_N)
 ) ext_merge_inst (
-    .i_r                                        (ext_r),
-    .i_v                                        (ext_v),
-    .i_e                                        (ext_e),
-    .i_m                                        (ext_m0),
+    .i_r                                        (ext_ready),
+    .i_v                                        (ext_valid),
+    .i_e                                        (ext_eop),
+    .i_m                                        (ext_meta0),
 
-    .o_r                                        (pad_i_r),
-    .o_v                                        (pad_i_v),
-    .o_e                                        (pad_i_e),
-    .o_m                                        (pad_i_m),
+    .o_r                                        (pad_input_ready),
+    .o_v                                        (pad_input_valid),
+    .o_e                                        (pad_input_eop),
+    .o_m                                        (pad_input_meta),
 
     .clk                                        (clk),
     .rst                                        (rst)
@@ -493,25 +493,25 @@ rrb_merge #(
 sha512_pre #(
 ) sha512_pre_inst (
 
-    .i_r                                        (pad_i_r),
-    .i_w                                        (pad_i_w),
-    .i_v                                        (pad_i_v),
-    .i_e                                        (pad_i_e),
-    .i_m                                        (pad_i_m),
+    .i_r                                        (pad_input_ready),
+    .i_w                                        (pad_input_wait),
+    .i_v                                        (pad_input_valid),
+    .i_e                                        (pad_input_eop),
+    .i_m                                        (pad_input_meta),
 
-    .o_v                                        (pad_o_v),
-    .o_e                                        (pad_o_e),
-    .o_m                                        (pad_o_m),
+    .o_v                                        (pad_output_valid),
+    .o_e                                        (pad_output_eop),
+    .o_m                                        (pad_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[4])
 );
 
 (* keep_hierarchy = "yes" *) throttle pad_th_inst (
-    .i                                          (pad_i_r & pad_i_v & pad_i_e),
-    .o                                          (pad_o_v & pad_o_e),
-    .f                                          (pad_o_f),
-    .w                                          (pad_i_w),
+    .i                                          (pad_input_ready & pad_input_valid & pad_input_eop),
+    .o                                          (pad_output_valid & pad_output_eop),
+    .f                                          (pad_output_fill),
+    .w                                          (pad_input_wait),
     .ths                                        ({ths[0]}),
     .clk                                        (clk),
     .rst                                        (rst)
@@ -537,52 +537,52 @@ sha512_pre #(
 
 /*
 (* dont_touch = "yes" *) piped_wire #(
-    .WIDTH                                      ($bits({sha_f_f, pad_o_m, pad_o_e, pad_o_v})),
+    .WIDTH                                      ($bits({sha_fifo_fill, pad_output_meta, pad_output_eop, pad_output_valid})),
     .DEPTH                                      (2)
 ) sha_i_pipe_inst (
-    .in                                         ({sha_f_f, pad_o_m, pad_o_e, pad_o_v}),
-    .out                                        ({pad_o_f, sha_f_m, sha_f_e, sha_f_v}),
+    .in                                         ({sha_fifo_fill, pad_output_meta, pad_output_eop, pad_output_valid}),
+    .out                                        ({pad_output_fill, sha_fifo_meta, sha_fifo_eop, sha_fifo_valid}),
 
     .clk                                        (clk),
     .reset                                      (rst)
 );
 
 (* keep_hierarchy = "yes" *) showahead_pkt_fifo #(
-    .WIDTH                                      ($bits({sha_f_m})),
+    .WIDTH                                      ($bits({sha_fifo_meta})),
     .DEPTH                                      (512)
 ) sha_f_inst (
     .aclr                                       (rst),
 
     .wr_clk                                     (clk),
-    .wr_req                                     (sha_f_v),
+    .wr_req                                     (sha_fifo_valid),
     .wr_full                                    (),
     .wr_full_b                                  (),
-    .wr_data                                    (sha_f_m),
-    .wr_eop                                     (sha_f_e),
+    .wr_data                                    (sha_fifo_meta),
+    .wr_eop                                     (sha_fifo_eop),
     .wr_count                                   (),
-    .wr_count_pkt                               (sha_f_f),
+    .wr_count_pkt                               (sha_fifo_fill),
 
     .rd_clk                                     (clk),
-    .rd_req                                     (sha_i_v & sha_i_r),
+    .rd_req                                     (sha_input_valid & sha_input_ready),
     .rd_empty                                   (),
-    .rd_not_empty                               (sha_i_v),
+    .rd_not_empty                               (sha_input_valid),
     .rd_count                                   (),
-    .rd_data                                    (sha_i_m),
-    .rd_eop                                     (sha_i_e)
+    .rd_data                                    (sha_input_meta),
+    .rd_eop                                     (sha_input_eop)
 );
 
 (* keep_hierarchy = "yes" *) sha512_modq_meta #(
     .KEY_D                                      (KEY_D)
 ) sha512_modq_meta_inst (
-    .i_r                                        (sha_i_r),
-    .i_w                                        (sha_i_w),
-    .i_v                                        (sha_i_v),
-    .i_e                                        (sha_i_e),
-    .i_m                                        (sha_i_m),
+    .i_r                                        (sha_input_ready),
+    .i_w                                        (sha_input_wait),
+    .i_v                                        (sha_input_valid),
+    .i_e                                        (sha_input_eop),
+    .i_m                                        (sha_input_meta),
 
-    .o_v                                        (sha_o_v),
+    .o_v                                        (sha_output_valid),
     .o_e                                        (),
-    .o_m                                        (sha_o_m),
+    .o_m                                        (sha_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[5])
@@ -590,10 +590,10 @@ sha512_pre #(
 
 (* keep_hierarchy = "yes" *) throttle #(
 ) sha_th_inst (
-    .i                                          (sha_i_r & sha_i_v & sha_i_e),
-    .o                                          (sha_o_v),
-    .f                                          (sha_o_f),
-    .w                                          (sha_i_w),
+    .i                                          (sha_input_ready & sha_input_valid & sha_input_eop),
+    .o                                          (sha_output_valid),
+    .f                                          (sha_output_fill),
+    .w                                          (sha_input_wait),
     .ths                                        ({ths[1]}),
     .clk                                        (clk),
     .rst                                        (rst)
@@ -619,34 +619,34 @@ sha512_pre #(
 
 /*
 (* dont_touch = "yes" *) piped_wire #(
-    .WIDTH                                      ($bits({sv0_f_f, sha_o_m, sha_o_v})),
+    .WIDTH                                      ($bits({sv0_fifo_fill, sha_output_meta, sha_output_valid})),
     .DEPTH                                      (2)
 ) sv_0_i_pipe_inst (
-    .in                                         ({sv0_f_f, sha_o_m, sha_o_v}),
-    .out                                        ({sha_o_f, sv0_f_m, sv0_f_v}),
+    .in                                         ({sv0_fifo_fill, sha_output_meta, sha_output_valid}),
+    .out                                        ({sha_output_fill, sv0_fifo_meta, sv0_fifo_valid}),
 
     .clk                                        (clk),
     .reset                                      (rst)
 );
 
 (* keep_hierarchy = "yes" *) showahead_fifo #(
-    .WIDTH                                      ($bits({sv0_f_m})),
+    .WIDTH                                      ($bits({sv0_fifo_meta})),
     .DEPTH                                      (512)
 ) sv0_f_inst (
     .aclr                                       (rst),
 
     .wr_clk                                     (clk),
-    .wr_req                                     (sv0_f_v),
+    .wr_req                                     (sv0_fifo_valid),
     .wr_full                                    (),
-    .wr_data                                    (sv0_f_m),
-    .wr_count                                   (sv0_f_f),
+    .wr_data                                    (sv0_fifo_meta),
+    .wr_count                                   (sv0_fifo_fill),
 
     .rd_clk                                     (clk),
-    .rd_req                                     (sv0_i_v & sv0_i_r),
+    .rd_req                                     (sv0_input_valid & sv0_input_ready),
     .rd_empty                                   (),
-    .rd_not_empty                               (sv0_i_v),
+    .rd_not_empty                               (sv0_input_valid),
     .rd_count                                   (),
-    .rd_data                                    (sv0_i_m)
+    .rd_data                                    (sv0_input_meta)
 );
 
 (* keep_hierarchy = "yes" *) ed25519_sigverify_0 #(
@@ -655,13 +655,13 @@ sha512_pre #(
     .N_SCH                                      (N_SCH),
     .KEY_D                                      (KEY_D)
 ) ed25519_sigverify_0_inst (
-    .i_r                                        (sv0_i_r),
-    .i_w                                        (sv0_i_w),
-    .i_v                                        (sv0_i_v),
-    .i_m                                        (sv0_i_m),
+    .i_r                                        (sv0_input_ready),
+    .i_w                                        (sv0_input_wait),
+    .i_v                                        (sv0_input_valid),
+    .i_m                                        (sv0_input_meta),
 
-    .o_v                                        (sv0_o_v),
-    .o_m                                        (sv0_o_m),
+    .o_v                                        (sv0_output_valid),
+    .o_m                                        (sv0_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[6])
@@ -669,10 +669,10 @@ sha512_pre #(
 
 (* keep_hierarchy = "yes" *) throttle #(
 ) sv0_th_inst (
-    .i                                          (sv0_i_r & sv0_i_v),
-    .o                                          (sv0_o_v),
-    .f                                          (sv0_o_f),
-    .w                                          (sv0_i_w),
+    .i                                          (sv0_input_ready & sv0_input_valid),
+    .o                                          (sv0_output_valid),
+    .f                                          (sv0_output_fill),
+    .w                                          (sv0_input_wait),
     .ths                                        ({ths[2]}),
     .clk                                        (clk),
     .rst                                        (rst)
@@ -698,34 +698,34 @@ sha512_pre #(
 
 /*
 (* dont_touch = "yes" *) piped_wire #(
-    .WIDTH                                      ($bits({sv1_f_f, sv0_o_m, sv0_o_v})),
+    .WIDTH                                      ($bits({sv1_fifo_fill, sv0_output_meta, sv0_output_valid})),
     .DEPTH                                      (2)
 ) sv1_i_pipe_inst (
-    .in                                         ({sv1_f_f, sv0_o_m, sv0_o_v}),
-    .out                                        ({sv0_o_f, sv1_f_m, sv1_f_v}),
+    .in                                         ({sv1_fifo_fill, sv0_output_meta, sv0_output_valid}),
+    .out                                        ({sv0_output_fill, sv1_fifo_meta, sv1_fifo_valid}),
 
     .clk                                        (clk),
     .reset                                      (rst)
 );
 
 (* keep_hierarchy = "yes" *) dual_clock_showahead_fifo #(
-    .WIDTH                                      ($bits({sv1_f_m})),
+    .WIDTH                                      ($bits({sv1_fifo_meta})),
     .DEPTH                                      (512)
 ) sv1_f_inst (
     .aclr                                       (rst),
 
     .wr_clk                                     (clk),
-    .wr_req                                     (sv1_f_v),
+    .wr_req                                     (sv1_fifo_valid),
     .wr_full                                    (),
-    .wr_data                                    (sv1_f_m),
-    .wr_count                                   (sv1_f_f),
+    .wr_data                                    (sv1_fifo_meta),
+    .wr_count                                   (sv1_fifo_fill),
 
     .rd_clk                                     (clk_f),
-    .rd_req                                     (sv1_i_v & sv1_i_r),
+    .rd_req                                     (sv1_input_valid & sv1_input_ready),
     .rd_empty                                   (),
-    .rd_not_empty                               (sv1_i_v),
+    .rd_not_empty                               (sv1_input_valid),
     .rd_count                                   (),
-    .rd_data                                    (sv1_i_m)
+    .rd_data                                    (sv1_input_meta)
 );
 
 (* keep_hierarchy = "yes" *) ed25519_sigverify_1 #(
@@ -734,13 +734,13 @@ sha512_pre #(
     .MUL_D                                      (MUL_D),
     .KEY_D                                      (KEY_D)
 ) ed25519_sigverify_1_inst (
-    .i_r                                        (sv1_i_r),
-    .i_w                                        (sv1_i_w),
-    .i_v                                        (sv1_i_v),
-    .i_m                                        (sv1_i_m),
+    .i_r                                        (sv1_input_ready),
+    .i_w                                        (sv1_input_wait),
+    .i_v                                        (sv1_input_valid),
+    .i_m                                        (sv1_input_meta),
 
-    .o_v                                        (sv1_o_v),
-    .o_m                                        (sv1_o_m),
+    .o_v                                        (sv1_output_valid),
+    .o_m                                        (sv1_output_meta),
 
     .clk                                        (clk_f),
     .rst                                        (rst_f_r[0])
@@ -748,10 +748,10 @@ sha512_pre #(
 
 (* keep_hierarchy = "yes" *) throttle #(
 ) sv1_th_inst (
-    .i                                          (sv1_i_r & sv1_i_v),
-    .o                                          (sv1_o_v),
-    .f                                          (sv1_o_f),
-    .w                                          (sv1_i_w),
+    .i                                          (sv1_input_ready & sv1_input_valid),
+    .o                                          (sv1_output_valid),
+    .f                                          (sv1_output_fill),
+    .w                                          (sv1_input_wait),
     .ths                                        ({ths[3]}),
     .clk                                        (clk_f),
     .rst                                        (rst_f_r[1])
@@ -777,57 +777,57 @@ sha512_pre #(
 
 /*
 (* dont_touch = "yes" *) piped_wire #(
-    .WIDTH                                      ($bits({sv2_f_f, sv1_o_m, sv1_o_v})),
+    .WIDTH                                      ($bits({sv2_fifo_fill, sv1_output_meta, sv1_output_valid})),
     .DEPTH                                      (2)
 ) sv2_i_pipe_inst (
-    .in                                         ({sv2_f_f, sv1_o_m, sv1_o_v}),
-    .out                                        ({sv1_o_f, sv2_f_m, sv2_f_v}),
+    .in                                         ({sv2_fifo_fill, sv1_output_meta, sv1_output_valid}),
+    .out                                        ({sv1_output_fill, sv2_fifo_meta, sv2_fifo_valid}),
 
     .clk                                        (clk_f),
     .reset                                      (rst_f_r[2])
 );
 
 (* keep_hierarchy = "yes" *) dual_clock_showahead_fifo #(
-    .WIDTH                                      ($bits({sv2_f_m})),
+    .WIDTH                                      ($bits({sv2_fifo_meta})),
     .DEPTH                                      (512)
 ) sv2_f_inst (
     .aclr                                       (rst_f_r[3]),
 
     .wr_clk                                     (clk_f),
-    .wr_req                                     (sv2_f_v),
+    .wr_req                                     (sv2_fifo_valid),
     .wr_full                                    (),
-    .wr_data                                    (sv2_f_m),
-    .wr_count                                   (sv2_f_f),
+    .wr_data                                    (sv2_fifo_meta),
+    .wr_count                                   (sv2_fifo_fill),
 
     .rd_clk                                     (clk),
-    .rd_req                                     (sv2_i_v & sv2_i_r),
+    .rd_req                                     (sv2_input_valid & sv2_input_ready),
     .rd_empty                                   (),
-    .rd_not_empty                               (sv2_i_v),
+    .rd_not_empty                               (sv2_input_valid),
     .rd_count                                   (),
-    .rd_data                                    (sv2_i_m)
+    .rd_data                                    (sv2_input_meta)
 );
 
 (* keep_hierarchy = "yes" *) ed25519_sigverify_2 #(
     .MUL_T                                      (MUL_T)
 ) ed25519_sigverify_2_inst (
-    .i_r                                        (sv2_i_r),
+    .i_r                                        (sv2_input_ready),
     .i_w                                        ('0),
-    .i_v                                        (sv2_i_v),
-    .i_m                                        (sv2_i_m),
+    .i_v                                        (sv2_input_valid),
+    .i_m                                        (sv2_input_meta),
 
-    .o_v                                        (sv2_o_v),
-    .o_m                                        (sv2_o_m),
+    .o_v                                        (sv2_output_valid),
+    .o_m                                        (sv2_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[8])
 );
 
 (* dont_touch = "yes" *) piped_wire #(
-    .WIDTH                                      ($bits({sv2_o_m, sv2_o_v})),
+    .WIDTH                                      ($bits({sv2_output_meta, sv2_output_valid})),
     .DEPTH                                      (4)
 ) ecc_o_pipe_inst (
-    .in                                         ({sv2_o_m, sv2_o_v}),
-    .out                                        ({ecc_o_m, ecc_o_v}),
+    .in                                         ({sv2_output_meta, sv2_output_valid}),
+    .out                                        ({ecc_output_meta, ecc_output_valid}),
 
     .clk                                        (clk),
     .reset                                      (rst)
@@ -931,31 +931,31 @@ sha512_pre #(
 
 always_ff@(posedge clk) dbg_wire[DBG_WIDTH-1:2] <= {
 
-    ecc_o_m.m.tid,
-    ecc_o_v,
+    ecc_output_meta.m.tid,
+    ecc_output_valid,
 
-    sv2_o_m.m.tid,
-    sv2_o_v,
+    sv2_output_meta.m.tid,
+    sv2_output_valid,
 
-    sv2_i_m.m.tid,
-    sv2_i_v,
+    sv2_input_meta.m.tid,
+    sv2_input_valid,
 
-    sv0_o_m.m.m.m.tid,
-    sv0_o_v,
+    sv0_output_meta.m.m.m.tid,
+    sv0_output_valid,
 
-    sha_o_m.m.m.tid,
-    sha_o_v,
+    sha_output_meta.m.m.tid,
+    sha_output_valid,
 
-    pad_o_m.m.m.tid,
-    pad_o_v,
+    pad_output_meta.m.m.tid,
+    pad_output_valid,
 
     |{
-        ecc_o_v,
-        sv2_o_v,
-        sv2_i_v,
-        sv0_o_v,
-        sha_o_v,
-        pad_o_v
+        ecc_output_valid,
+        sv2_output_valid,
+        sv2_input_valid,
+        sv0_output_valid,
+        sha_output_valid,
+        pad_output_valid
     }
 };
 
@@ -964,24 +964,24 @@ assign dbg_wire[0+:2] = {
     clk
 };
 
-always_ff@(posedge clk)   if (pad_i_v & pad_i_r & pad_i_e)    $display("%t: pad_i  :", $time);
-always_ff@(posedge clk)   if (sha_i_v & sha_i_r & sha_i_e)    $display("%t: sha_i  : %x", $time, sha_i_m.m.m.tid);
-always_ff@(posedge clk)   if (sv0_i_v & sv0_i_r)              $display("%t: sv0_i  :", $time);
-always_ff@(posedge clk_f) if (sv1_i_v & sv1_i_r)              $display("%t: sv1_i  :", $time);
-always_ff@(posedge clk)   if (sv2_i_v & sv2_i_r)              $display("%t: sv2_i  :", $time);
+always_ff@(posedge clk)   if (pad_input_valid & pad_input_ready & pad_input_eop)    $display("%t: pad_i  :", $time);
+always_ff@(posedge clk)   if (sha_input_valid & sha_input_ready & sha_input_eop)    $display("%t: sha_i  : %x", $time, sha_input_meta.m.m.tid);
+always_ff@(posedge clk)   if (sv0_input_valid & sv0_input_ready)              $display("%t: sv0_i  :", $time);
+always_ff@(posedge clk_f) if (sv1_input_valid & sv1_input_ready)              $display("%t: sv1_i  :", $time);
+always_ff@(posedge clk)   if (sv2_input_valid & sv2_input_ready)              $display("%t: sv2_i  :", $time);
 
-// always_ff@(posedge clk)   if (pad_i_w)            $display("%t: pad_i_w: %0d %0d %0d - %0d - %0d", $time, ths[0][0+:12], ths[0][12+:12], ths[0][24+:12], pad_o_f, pad_th_inst.cnt);
-// always_ff@(posedge clk)   if (sha_i_w)            $display("%t: sha_i_w: %0d %0d %0d - %0d - %0d", $time, ths[1][0+:12], ths[1][12+:12], ths[1][24+:12], sha_o_f, sha_th_inst.cnt);
-// always_ff@(posedge clk)   if (sv0_i_w)            $display("%t: sv0_i_w: %0d %0d %0d - %0d - %0d", $time, ths[2][0+:12], ths[2][12+:12], ths[2][24+:12], sv0_o_f, sv0_th_inst.cnt);
-// always_ff@(posedge clk_f) if (sv1_i_w)            $display("%t: sv1_i_w: %0d %0d %0d - %0d - %0d", $time, ths[3][0+:12], ths[3][12+:12], ths[3][24+:12], sv1_o_f, sv1_th_inst.cnt);
+// always_ff@(posedge clk)   if (pad_input_wait)            $display("%t: pad_input_wait: %0d %0d %0d - %0d - %0d", $time, ths[0][0+:12], ths[0][12+:12], ths[0][24+:12], pad_output_fill, pad_th_inst.counter_value);
+// always_ff@(posedge clk)   if (sha_input_wait)            $display("%t: sha_input_wait: %0d %0d %0d - %0d - %0d", $time, ths[1][0+:12], ths[1][12+:12], ths[1][24+:12], sha_output_fill, sha_th_inst.counter_value);
+// always_ff@(posedge clk)   if (sv0_input_wait)            $display("%t: sv0_input_wait: %0d %0d %0d - %0d - %0d", $time, ths[2][0+:12], ths[2][12+:12], ths[2][24+:12], sv0_output_fill, sv0_th_inst.counter_value);
+// always_ff@(posedge clk_f) if (sv1_input_wait)            $display("%t: sv1_input_wait: %0d %0d %0d - %0d - %0d", $time, ths[3][0+:12], ths[3][12+:12], ths[3][24+:12], sv1_output_fill, sv1_th_inst.counter_value);
 
-always_ff@(posedge clk)   if (pad_o_v & pad_o_e)  $display("%t: o_pad_o: %x", $time, pad_o_m.m.m.tid);
-always_ff@(posedge clk)   if (sha_o_v)            $display("%t: o_sha_o: %x", $time, sha_o_m.m.m.tid);
-always_ff@(posedge clk)   if (sv0_o_v)            $display("%t: o_sv0_o: %x", $time, sv0_o_m.m.m.m.tid);
-always_ff@(posedge clk_f) if (sv1_o_v)            $display("%t: o_sv1_o: %x", $time, sv1_o_m.m.tid);
-always_ff@(posedge clk)   if (sv2_o_v)            $display("%t: o_sv2_o: %x", $time, sv2_o_m.m.tid);
-always_ff@(posedge clk)   if (ecc_o_v)            $display("%t: o_ecc_o: %x", $time, ecc_o_m.m.tid);
-always_ff@(posedge clk)   if (res_o_v[0])         $display("%t: o_re[0]: %x", $time, res_o_d[0]);
+always_ff@(posedge clk)   if (pad_output_valid & pad_output_eop)  $display("%t: o_pad_o: %x", $time, pad_output_meta.m.m.tid);
+always_ff@(posedge clk)   if (sha_output_valid)            $display("%t: o_sha_o: %x", $time, sha_output_meta.m.m.tid);
+always_ff@(posedge clk)   if (sv0_output_valid)            $display("%t: o_sv0_o: %x", $time, sv0_output_meta.m.m.m.tid);
+always_ff@(posedge clk_f) if (sv1_output_valid)            $display("%t: o_sv1_o: %x", $time, sv1_output_meta.m.tid);
+always_ff@(posedge clk)   if (sv2_output_valid)            $display("%t: o_sv2_o: %x", $time, sv2_output_meta.m.tid);
+always_ff@(posedge clk)   if (ecc_output_valid)            $display("%t: o_ecc_o: %x", $time, ecc_output_meta.m.tid);
+always_ff@(posedge clk)   if (result_valid[0])         $display("%t: o_re[0]: %x", $time, result_data[0]);
 
 always_ff@(negedge clk) $display("%t: -----------",$time);
 

@@ -33,9 +33,9 @@ module dma_result #(
     input wire rst
 );
 
-logic [PCIE_N-1:0][1-1:0]               dma_p_r;
-logic [PCIE_N-1:0][1-1:0]               dma_p_v;
-mcache_pcim_t [PCIE_N-1:0]              dma_p_dab;
+logic [PCIE_N-1:0][1-1:0]               dma_port_ready;
+logic [PCIE_N-1:0][1-1:0]               dma_port_valid;
+mcache_pcim_t [PCIE_N-1:0]              dma_port_desc;
 
 logic [64-1:0]                          dma_aa;
 
@@ -53,15 +53,15 @@ generate
         logic [1-1:0]                       res_o_v;
         logic [1-1:0]                       res_o_d;
 
-        assign dma_p_v[g_i]                 = res_o_v & dma_m_v & (|dma_p_dab[g_i].pcim_addr) & (send_fails | res_o_d);
-        assign dma_p_dab[g_i].pcim_strb     = dma_p_dab[g_i].pcim_addr[5] ? 64'hFFFF_FFFF_0000_0000 : 64'h0000_0000_FFFF_FFFF;
-        assign dma_p_dab[g_i].ctrl[1:0]     = dma_m_ctrl[1:0];
-        assign dma_p_dab[g_i].ctrl[2]       = ~res_o_d;
-        assign dma_p_dab[g_i].ctrl[15:3]    = dma_m_ctrl[15:3];
-        assign dma_p_dab[g_i].tsorig        = '0;
-        assign dma_p_dab[g_i].tspub         = '0;
+        assign dma_port_valid[g_i]                 = res_o_v & dma_m_v & (|dma_port_desc[g_i].pcim_addr) & (send_fails | res_o_d);
+        assign dma_port_desc[g_i].pcim_strb     = dma_port_desc[g_i].pcim_addr[5] ? 64'hFFFF_FFFF_0000_0000 : 64'h0000_0000_FFFF_FFFF;
+        assign dma_port_desc[g_i].ctrl[1:0]     = dma_m_ctrl[1:0];
+        assign dma_port_desc[g_i].ctrl[2]       = ~res_o_d;
+        assign dma_port_desc[g_i].ctrl[15:3]    = dma_m_ctrl[15:3];
+        assign dma_port_desc[g_i].tsorig        = '0;
+        assign dma_port_desc[g_i].tspub         = '0;
 
-        always_ff@(posedge clk) res_p [g_i] <= dma_p_r[g_i] & dma_p_v[g_i];
+        always_ff@(posedge clk) res_p [g_i] <= dma_port_ready[g_i] & dma_port_valid[g_i];
 
         (* dont_touch = "yes" *) piped_wire #(
             .WIDTH                      ($bits({ext_m[g_i], ext_v[g_i] & ext_r[g_i] & ext_e[g_i]})),
@@ -94,11 +94,11 @@ generate
             .wr_data                    ({ext_pp_m.sig_l[0+:64], ext_pp_m.dma_chunk, ext_pp_m.dma_seq, ext_pp_m.dma_addr, ext_pp_m.dma_ctrl, ext_pp_m.dma_size}),
 
             .rd_clk                     (clk),
-            .rd_req                     (dma_m_v & res_o_v & dma_p_r[g_i]),
+            .rd_req                     (dma_m_v & res_o_v & dma_port_ready[g_i]),
             .rd_empty                   (),
             .rd_not_empty               (dma_m_v),
             .rd_count                   (),
-            .rd_data                    ({dma_p_dab[g_i].sig, dma_p_dab[g_i].chunk, dma_p_dab[g_i].seq, dma_p_dab[g_i].pcim_addr, dma_m_ctrl, dma_p_dab[g_i].sz})
+            .rd_data                    ({dma_port_desc[g_i].sig, dma_port_desc[g_i].chunk, dma_port_desc[g_i].seq, dma_port_desc[g_i].pcim_addr, dma_m_ctrl, dma_port_desc[g_i].sz})
         );
 
         tid_inorder #(
@@ -111,7 +111,7 @@ generate
             .i_c                        (res_c      [g_i]),
             .i_d                        (res_d      [g_i]),
 
-            .o_r                        (dma_m_v & res_o_v & dma_p_r[g_i]),
+            .o_r                        (dma_m_v & res_o_v & dma_port_ready[g_i]),
             .o_v                        (res_o_v),
             .o_d                        (res_o_d),
 
@@ -123,13 +123,13 @@ generate
 endgenerate
 
 rrb_merge #(
-    .W                                  ($bits({dma_p_dab[0]})),
+    .W                                  ($bits({dma_port_desc[0]})),
     .N                                  (PCIE_N)
 ) dma_merge_inst (
-    .i_r                                (dma_p_r),
-    .i_v                                (dma_p_v),
+    .i_r                                (dma_port_ready),
+    .i_v                                (dma_port_valid),
     .i_e                                ({PCIE_N{1'b1}}),
-    .i_m                                (dma_p_dab),
+    .i_m                                (dma_port_desc),
 
     .o_r                                (dma_push_ready),
     .o_v                                (dma_push_valid),
@@ -141,10 +141,10 @@ rrb_merge #(
 );
 
 always_ff@(posedge clk)
-if (|dma_p_v)
+if (|dma_port_valid)
 $display("%t: %m: %b %b - %b %b", $time
-, dma_p_r
-, dma_p_v
+, dma_port_ready
+, dma_port_valid
 , dma_push_ready
 , dma_push_valid
 );

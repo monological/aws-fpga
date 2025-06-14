@@ -420,17 +420,17 @@ dma_result #(
     .dma_fifo_full              (dma_fifo_full),
     .dma_push_data              (dma_push_data),
 
-    .ext_v                      (ext_valid),
-    .ext_r                      (ext_ready),
-    .ext_e                      (ext_eop),
-    .ext_m                      (ext_meta1),
+    .ext_valid                  (ext_valid),
+    .ext_ready                  (ext_ready),
+    .ext_eop                    (ext_eop),
+    .ext_meta                   (ext_meta1),
 
-    .res_v                      (result_valid),
-    .res_t                      (result_tid),
-    .res_d                      (result_data),
-    .res_c                      (result_count),
-    .res_f                      (result_full),
-    .res_p                      (result_push),
+    .result_valid               (result_valid),
+    .result_tid                 (result_tid),
+    .result_data                (result_data),
+    .result_count               (result_count),
+    .result_full                (result_full),
+    .result_push                (result_push),
 
     .send_fails                 (send_fails),
 
@@ -558,15 +558,15 @@ sha512_pre #(
 (* keep_hierarchy = "yes" *) sha512_modq_meta #(
     .KEY_D                                      (KEY_D)
 ) sha512_modq_meta_inst (
-    .i_r                                        (sha_input_ready),
-    .i_w                                        (sha_input_wait),
-    .i_v                                        (sha_input_valid),
-    .i_e                                        (sha_input_eop),
-    .i_m                                        (sha_input_meta),
+    .in_ready                                   (sha_input_ready),
+    .in_wait                                    (sha_input_wait),
+    .in_valid                                   (sha_input_valid),
+    .in_last                                    (sha_input_eop),
+    .in_meta                                    (sha_input_meta),
 
-    .o_v                                        (sha_output_valid),
-    .o_e                                        (),
-    .o_m                                        (sha_output_meta),
+    .out_valid                                  (sha_output_valid),
+    .out_last                                   (),
+    .out_meta                                   (sha_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[5])
@@ -637,13 +637,13 @@ sha512_pre #(
     .N_SCH                                      (N_SCH),
     .KEY_D                                      (KEY_D)
 ) ed25519_sigverify_0_inst (
-    .i_r                                        (sv0_input_ready),
-    .i_w                                        (sv0_input_wait),
-    .i_v                                        (sv0_input_valid),
-    .i_m                                        (sv0_input_meta),
+    .in_ready                                   (sv0_input_ready),
+    .in_wait                                    (sv0_input_wait),
+    .in_valid                                   (sv0_input_valid),
+    .in_meta                                    (sv0_input_meta),
 
-    .o_v                                        (sv0_output_valid),
-    .o_m                                        (sv0_output_meta),
+    .out_valid                                  (sv0_output_valid),
+    .out_meta                                   (sv0_output_meta),
 
     .clk                                        (clk),
     .rst                                        (rst_r[6])

@@ -52,21 +52,21 @@ module ed25519_sigverify_0 #(
     KEY_D                                               = 512,
     KEY_D_L                                             = $clog2(KEY_D)
 ) (
-    output logic [1-1:0]                                i_r, // backpressure
-    input wire [1-1:0]                                  i_w, // wait
-    input wire [1-1:0]                                  i_v,
-    input wire [$bits(sv_meta4_t)-1:0]                  i_m,
+    output logic [1-1:0]                                in_ready, // backpressure
+    input wire [1-1:0]                                  in_wait, // wait
+    input wire [1-1:0]                                  in_valid,
+    input wire [$bits(sv_meta4_t)-1:0]                  in_meta,
 
-    output logic [1-1:0]                                o_v,
-    output logic [$bits(sv_meta5_t)-1:0]                o_m,
+    output logic [1-1:0]                                out_valid,
+    output logic [$bits(sv_meta5_t)-1:0]                out_meta,
 
     input wire clk,
     input wire rst
 );
 
-logic [KEY_D_L-1:0]                                     i_k;
-sv_meta4_t                                              i_mm;
-sv_meta5_t                                              o_mm;
+logic [KEY_D_L-1:0]                                     in_key;
+sv_meta4_t                                              in_meta_reg;
+sv_meta5_t                                              out_meta_reg;
 
 logic [1-1:0]                                           key_i_r;
 logic [1-1:0]                                           key_i_v;
@@ -88,31 +88,31 @@ logic [256-1:0]                                         sch_m_d;
 
 logic [1-1:0]                                           sch_a_v;
 
-assign i_r                                              = |sch_i_r;
-assign i_mm                                             = i_m;
-assign o_m                                              = o_mm;
+assign in_ready                                         = |sch_i_r;
+assign in_meta_reg                                      = in_meta;
+assign out_meta                                         = out_meta_reg;
 
 assign key_i_v                                          = |sch_i_r;
 
 key_store #(
     .D                                                  (KEY_D),
-    .W                                                  ($bits({i_mm}))
+    .W                                                  ($bits({in_meta_reg}))
 ) keystore_inst (
     .i_r                                                (key_i_r),
     .i_v                                                (key_i_v),
-    .i_k                                                (i_k),
-    .i_d                                                ({i_mm}),
+    .i_k                                                (in_key),
+    .i_d                                                ({in_meta_reg}),
 
     .o_r                                                (sch_m_v & (sch_m_a == (N_SCH_O-1))),
     .o_k                                                (sch_m_k),
-    .o_d                                                ({o_mm.m}),
+    .o_d                                                ({out_meta_reg.m}),
 
     .clk                                                (clk),
     .rst                                                (rst)
 );
 
 always_ff@(posedge clk) begin
-    if (i_r)
+    if (in_ready)
         sch_i_rrb                                       <= (sch_i_rrb == N_SCH-1) ? 0 : sch_i_rrb + 1;
     if (rst)
         sch_i_rrb                                       <= 0;
@@ -140,21 +140,21 @@ generate;
                 0: begin
                     if (i_v & (~i_w) & key_i_r & (sch_i_rrb == g_i)) begin
                         sch_ii_v                    <= 1;
-                        sch_ii_k                    <= i_k;
-                        sch_ii_d                    <= i_mm.m.pub;
+                        sch_ii_k                    <= in_key;
+                        sch_ii_d                    <= in_meta_reg.m.pub;
                         sch_ii_st                   <= 1;
                     end
                 end
                 1: begin
                     if (sch_ii_r) begin
-                        sch_ii_d                    <= i_mm.m.sig_l;
+                        sch_ii_d                    <= in_meta_reg.m.sig_l;
                         sch_ii_st                   <= 2;
                     end
                 end
                 2: begin
                     if (sch_ii_r) begin
                         sch_i_r[g_i]                <= 1;
-                        sch_ii_d                    <= i_mm.m.sig_h;
+                        sch_ii_d                    <= in_meta_reg.m.sig_h;
                         sch_ii_st                   <= 3;
                     end
                 end
@@ -275,23 +275,23 @@ generate
 
             .rd_clock                   (clk),
             .rd_address                 (sch_m_k),
-            .q                          (o_mm.os[g_i]),
+            .q                          (out_meta_reg.os[g_i]),
             .rd_en                      (1'b1)
         );
     end
 endgenerate
 
 always_ff@(posedge clk) begin
-    o_v                                             <= sch_m_v & (sch_m_a == (N_SCH_O-1));
-    o_mm.os[N_SCH_O-1]                              <= sch_m_d;
+    out_valid                                       <= sch_m_v & (sch_m_a == (N_SCH_O-1));
+    out_meta_reg.os[N_SCH_O-1]                      <= sch_m_d;
     if (rst)
-        o_v                                         <= 0;
+        out_valid                                   <= 0;
 end
 
-always_ff@(posedge clk) if ((i_v & i_r) | sch_m_v | o_v)
+always_ff@(posedge clk) if ((in_valid & in_ready) | sch_m_v | out_valid)
 $display("%t: %m: %x %x %x %x - %x %x %x %x - %x %x", $time
-    , i_v
-    , i_w
+    , in_valid
+    , in_wait
     , sch_i_rrb
     , sch_i_r
 
@@ -300,8 +300,8 @@ $display("%t: %m: %x %x %x %x - %x %x %x %x - %x %x", $time
     , sch_m_k
     , sch_m_d
 
-    , o_v
-    , o_m
+    , out_valid
+    , out_meta
 );
 
 endmodule

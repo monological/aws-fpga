@@ -12,17 +12,17 @@ module dma_result #(
     input wire [1-1:0]                                  dma_fifo_full,
     output logic [256-1:0]                              dma_push_data,
 
-    input wire [PCIE_N-1:0][1-1:0]                      ext_v,
-    input wire [PCIE_N-1:0][1-1:0]                      ext_r,
-    input wire [PCIE_N-1:0][1-1:0]                      ext_e,
-    input wire [PCIE_N-1:0][$bits(pcie_meta_t)-1:0]     ext_m,
+    input wire [PCIE_N-1:0][1-1:0]                      ext_valid,
+    input wire [PCIE_N-1:0][1-1:0]                      ext_ready,
+    input wire [PCIE_N-1:0][1-1:0]                      ext_eop,
+    input wire [PCIE_N-1:0][$bits(pcie_meta_t)-1:0]     ext_meta,
 
-    input wire [PCIE_N-1:0][1-1:0]                      res_v,
-    input wire [PCIE_N-1:0][64-1:0]                     res_t,
-    input wire [PCIE_N-1:0][1-1:0]                      res_d,
-    output logic [PCIE_N-1:0][16-1:0]                   res_c,
-    output logic [PCIE_N-1:0][1-1:0]                    res_f,
-    output logic [PCIE_N-1:0][1-1:0]                    res_p,
+    input wire [PCIE_N-1:0][1-1:0]                      result_valid,
+    input wire [PCIE_N-1:0][64-1:0]                     result_tid,
+    input wire [PCIE_N-1:0][1-1:0]                      result_data,
+    output logic [PCIE_N-1:0][16-1:0]                   result_count,
+    output logic [PCIE_N-1:0][1-1:0]                    result_full,
+    output logic [PCIE_N-1:0][1-1:0]                    result_push,
 
     input wire [64-1:0]                                 priv_base,
     input wire [64-1:0]                                 priv_mask,
@@ -45,39 +45,39 @@ generate
 
     for (genvar g_i = 0; g_i < PCIE_N; g_i ++) begin: P_IN
 
-        logic [1-1:0]                       ext_p_v, ext_pp_v;
-        pcie_meta_t                         ext_p_m, ext_pp_m;
+        logic [1-1:0]                       ext_pipe_valid, ext_pipe_valid2;
+        pcie_meta_t                         ext_pipe_meta, ext_pipe_meta2;
 
-        logic [1-1:0]                       dma_m_v;
-        logic [16-1:0]                      dma_m_ctrl;
-        logic [1-1:0]                       res_o_v;
-        logic [1-1:0]                       res_o_d;
+        logic [1-1:0]                       dma_meta_valid;
+        logic [16-1:0]                      dma_meta_ctrl;
+        logic [1-1:0]                       result_out_valid;
+        logic [1-1:0]                       result_out_data;
 
-        assign dma_port_valid[g_i]                 = res_o_v & dma_m_v & (|dma_port_desc[g_i].pcim_addr) & (send_fails | res_o_d);
+        assign dma_port_valid[g_i]                 = result_out_valid & dma_meta_valid & (|dma_port_desc[g_i].pcim_addr) & (send_fails | result_out_data);
         assign dma_port_desc[g_i].pcim_strb     = dma_port_desc[g_i].pcim_addr[5] ? 64'hFFFF_FFFF_0000_0000 : 64'h0000_0000_FFFF_FFFF;
-        assign dma_port_desc[g_i].ctrl[1:0]     = dma_m_ctrl[1:0];
-        assign dma_port_desc[g_i].ctrl[2]       = ~res_o_d;
-        assign dma_port_desc[g_i].ctrl[15:3]    = dma_m_ctrl[15:3];
+        assign dma_port_desc[g_i].ctrl[1:0]     = dma_meta_ctrl[1:0];
+        assign dma_port_desc[g_i].ctrl[2]       = ~result_out_data;
+        assign dma_port_desc[g_i].ctrl[15:3]    = dma_meta_ctrl[15:3];
         assign dma_port_desc[g_i].tsorig        = '0;
         assign dma_port_desc[g_i].tspub         = '0;
 
         always_ff@(posedge clk) res_p [g_i] <= dma_port_ready[g_i] & dma_port_valid[g_i];
 
         (* dont_touch = "yes" *) piped_wire #(
-            .WIDTH                      ($bits({ext_m[g_i], ext_v[g_i] & ext_r[g_i] & ext_e[g_i]})),
+            .WIDTH                      ($bits({ext_meta[g_i], ext_valid[g_i] & ext_ready[g_i] & ext_eop[g_i]})),
             .DEPTH                      (2)
         ) ext_pipe_inst (
-            .in                         ({ext_m[g_i], ext_v[g_i] & ext_r[g_i] & ext_e[g_i]}),
-            .out                        ({ext_p_m, ext_p_v}),
+            .in                         ({ext_meta[g_i], ext_valid[g_i] & ext_ready[g_i] & ext_eop[g_i]}),
+            .out                        ({ext_pipe_meta, ext_pipe_valid}),
 
             .clk                        (clk),
             .reset                      (rst)
         );
 
         always_ff@(posedge clk) begin
-            ext_pp_v                    <= ext_p_v;
-            ext_pp_m                    <= ext_p_m;
-            ext_pp_m.dma_addr           <= (ext_p_m.dma_addr & priv_mask) + priv_base;
+            ext_pipe_valid2             <= ext_pipe_valid;
+            ext_pipe_meta2              <= ext_pipe_meta;
+            ext_pipe_meta2.dma_addr     <= (ext_pipe_meta.dma_addr & priv_mask) + priv_base;
         end
 
         showahead_fifo #(
@@ -91,29 +91,29 @@ generate
             .wr_full                    (),
             .wr_full_b                  (),
             .wr_count                   (),
-            .wr_data                    ({ext_pp_m.sig_l[0+:64], ext_pp_m.dma_chunk, ext_pp_m.dma_seq, ext_pp_m.dma_addr, ext_pp_m.dma_ctrl, ext_pp_m.dma_size}),
+            .wr_data                    ({ext_pipe_meta2.sig_l[0+:64], ext_pipe_meta2.dma_chunk, ext_pipe_meta2.dma_seq, ext_pipe_meta2.dma_addr, ext_pipe_meta2.dma_ctrl, ext_pipe_meta2.dma_size}),
 
             .rd_clk                     (clk),
-            .rd_req                     (dma_m_v & res_o_v & dma_port_ready[g_i]),
+            .rd_req                     (dma_meta_valid & result_out_valid & dma_port_ready[g_i]),
             .rd_empty                   (),
-            .rd_not_empty               (dma_m_v),
+            .rd_not_empty               (dma_meta_valid),
             .rd_count                   (),
-            .rd_data                    ({dma_port_desc[g_i].sig, dma_port_desc[g_i].chunk, dma_port_desc[g_i].seq, dma_port_desc[g_i].pcim_addr, dma_m_ctrl, dma_port_desc[g_i].sz})
+            .rd_data                    ({dma_port_desc[g_i].sig, dma_port_desc[g_i].chunk, dma_port_desc[g_i].seq, dma_port_desc[g_i].pcim_addr, dma_meta_ctrl, dma_port_desc[g_i].sz})
         );
 
         tid_inorder #(
             .W                          ($bits({res_d[g_i]})),
             .D                          (2048)
         ) tid_inorder_inst (
-            .i_v                        (res_v      [g_i]),
-            .i_a                        (res_t      [g_i][0+:11]),
-            .i_f                        (res_f      [g_i]),
-            .i_c                        (res_c      [g_i]),
-            .i_d                        (res_d      [g_i]),
+            .in_valid                   (result_valid      [g_i]),
+            .in_addr                    (result_tid        [g_i][0+:11]),
+            .in_full                    (result_full       [g_i]),
+            .in_count                   (result_count      [g_i]),
+            .in_data                    (result_data       [g_i]),
 
-            .o_r                        (dma_m_v & res_o_v & dma_port_ready[g_i]),
-            .o_v                        (res_o_v),
-            .o_d                        (res_o_d),
+            .out_ready                  (dma_meta_valid & result_out_valid & dma_port_ready[g_i]),
+            .out_valid                  (result_out_valid),
+            .out_data                   (result_out_data),
 
             .clk                        (clk),
             .rst                        (rst)

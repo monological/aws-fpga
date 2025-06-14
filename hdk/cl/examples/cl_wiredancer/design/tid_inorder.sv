@@ -32,15 +32,15 @@ module tid_inorder #(
     D_L                         = $clog2(D),
     W_L                         = $clog2(W)
 ) (
-    input wire [1-1:0]          i_v,
-    input wire [D_L-1:0]        i_a,
-    input wire [W-1:0]          i_d,
-    output logic [1-1:0]        i_f,
-    output logic [D_L+1-1:0]    i_c,
+    input wire [1-1:0]          in_valid,
+    input wire [D_L-1:0]        in_addr,
+    input wire [W-1:0]          in_data,
+    output logic [1-1:0]        in_full,
+    output logic [D_L+1-1:0]    in_count,
 
-    input wire [1-1:0]          o_r,
-    output logic [1-1:0]        o_v,
-    output logic [W-1:0]        o_d,
+    input wire [1-1:0]          out_ready,
+    output logic [1-1:0]        out_valid,
+    output logic [W-1:0]        out_data,
 
     input wire [1-1:0]          clk,
     input wire [1-1:0]          rst
@@ -55,23 +55,23 @@ logic [W-1:0]                   oo_d;
 logic [D_L-1:0]                 oo_a;
 logic [D_L-1:0]                 oo_a_n;
 
-assign oo_r                     = o_r | ~o_v;
+assign oo_r                     = out_ready | ~out_valid;
 assign oo_a_n                   = (oo_v & oo_r) ? oo_a + 1 : oo_a;
 
-assign i_f                      = i_c >= D-1;
+assign in_full                  = in_count >= D-1;
 assign oo_v                     = (oo_t > last_ts);
 
 simple_dual_port_ram #(
     .WRITE_MODE                                     ("read_first"),
     .CLOCKING_MODE                                  ("common_clock"),
     .ADDRESS_WIDTH                                  (D_L),
-    .DATA_WIDTH                                     ($bits({timestamp, i_d}))
+    .DATA_WIDTH                                     ($bits({timestamp, in_data}))
 ) ram_inst (
     .wr_clock                                       (clk),
-    .wr_address                                     (i_a),
-    .wr_en                                          (i_v),
+    .wr_address                                     (in_addr),
+    .wr_en                                          (in_valid),
     .wr_byteenable                                  ('1),
-    .data                                           ({timestamp, i_d}),
+    .data                                           ({timestamp, in_data}),
 
     .rd_clock                                       (clk),
     .rd_address                                     (oo_a_n),
@@ -102,36 +102,36 @@ always_ff@(posedge clk) begin
     oo_a                        <= oo_a_n;
 
     if (oo_r) begin
-        o_v                     <= oo_v;
-        o_d                     <= oo_d;
+        out_valid               <= oo_v;
+        out_data                <= oo_d;
     end
 
     case({
-        i_v,
-        o_v & o_r
+        in_valid,
+        out_valid & out_ready
     })
-        2'b10: i_c              <= i_c + 1;
-        2'b01: i_c              <= i_c - 1;
+        2'b10: in_count         <= in_count + 1;
+        2'b01: in_count         <= in_count - 1;
     endcase
 
     if (rst) begin
-        i_c                     <= 0;
-        o_v                     <= 0;
+        in_count                <= 0;
+        out_valid               <= 0;
         oo_a                    <= 0;
         timestamp               <= 0;
     end
 end
 
-always_ff@(posedge clk) if (i_v | o_v) $display("%t: %x %x %b %b %x - %x %x %x", $time
-    , i_v
-    , i_a
-    , i_c
-    , i_f
-    , i_d
+always_ff@(posedge clk) if (in_valid | out_valid) $display("%t: %x %x %b %b %x - %x %x %x", $time
+    , in_valid
+    , in_addr
+    , in_count
+    , in_full
+    , in_data
 
-    , o_v
-    , o_r
-    , o_d
+    , out_valid
+    , out_ready
+    , out_data
 );
 
 endmodule

@@ -400,8 +400,12 @@ generate
             res_o_d             [g_i]   <= 0;
         end
 
+        assign ext_r [g_i]   = 1;
+
     end
 endgenerate
+
+
 
 // DDDDDDDDDDDDD        MMMMMMMM               MMMMMMMM               AAA               
 // D::::::::::::DDD     M:::::::M             M:::::::M              A:::A              

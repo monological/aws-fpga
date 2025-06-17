@@ -41,30 +41,17 @@ file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc $TARGET_DIR
 file copy -force $CL_DIR/design/cl_wiredancer.sv                       $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma_defines.vh                   $TARGET_DIR
 file copy -force $CL_DIR/design/cl_id_defines.vh                         $TARGET_DIR
-file copy -force $CL_DIR/design/cl_dram_dma_pkg.sv                       $TARGET_DIR
 file copy -force $CL_DIR/design/cl_tst.sv                                $TARGET_DIR
 file copy -force $CL_DIR/design/cl_int_tst.sv                            $TARGET_DIR
 file copy -force $CL_DIR/design/mem_scrb.sv                              $TARGET_DIR
 file copy -force $CL_DIR/design/cl_tst_scrb.sv                           $TARGET_DIR
-file copy -force $CL_DIR/design/axil_slave.sv                            $TARGET_DIR
-file copy -force $CL_DIR/design/cl_int_slv.sv                            $TARGET_DIR
-file copy -force $CL_DIR/design/cl_pcim_mstr.sv                          $TARGET_DIR
-file copy -force $CL_DIR/design/cl_vio.sv                                $TARGET_DIR
-file copy -force $CL_DIR/design/cl_dma_pcis_slv.sv                       $TARGET_DIR
 file copy -force $CL_DIR/design/cl_ila.sv                                $TARGET_DIR
-file copy -force $CL_DIR/design/cl_ocl_slv.sv                            $TARGET_DIR
-file copy -force $CL_DIR/design/cl_sda_slv.sv                            $TARGET_DIR
-file copy -force $CL_DIR/design/cl_dram_dma_axi_mstr.sv                  $TARGET_DIR
-file copy -force $CL_DIR/design/cl_hbm_axi4.sv                           $TARGET_DIR
-file copy -force $CL_DIR/design/cl_hbm_wrapper.sv                        $TARGET_DIR
 
 # wiredancer files
-file copy -force $CL_DIR/design/areset_sync.sv                     $TARGET_DIR
 file copy -force $CL_DIR/design/dual_clock_showahead_fifo.sv       $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_add_modp.sv                $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_mul_modp.sv                $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_point_add.sv               $TARGET_DIR
-file copy -force $CL_DIR/design/ed25519_point_dbl.sv               $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_sigverify_0.sv             $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_sigverify_1.sv             $TARGET_DIR
 file copy -force $CL_DIR/design/ed25519_sigverify_2.sv             $TARGET_DIR

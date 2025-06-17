@@ -64,13 +64,13 @@ logic [255-1:0]                                 dsdp_o_Zz;
 
 assign i_r                                      = i_rr[0] & i_rr[1] & (~i_w);
 assign i_mm                                     = i_m;
+assign o_m                                      = o_mm;
 
 always_ff@(posedge clk) begin
     o_v                                         <= dsdp_o_v;
     o_mm.Zx                                     <= dsdp_o_Zx;
     o_mm.Zy                                     <= dsdp_o_Zy;
     o_mm.Zz                                     <= dsdp_o_Zz;
-    o_m                                         <= o_mm;
     if (rst)
         o_v <= 0;
 end

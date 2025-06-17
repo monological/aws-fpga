@@ -44,9 +44,6 @@ module cl_wiredancer
   assign cl_sh_dma_rd_full  = 'b0;
   assign cl_sh_dma_wr_full  = 'b0;
 
-  assign cl_sh_pcim_awuser  = 'b0;
-  assign cl_sh_pcim_aruser  = 'b0;
-
   assign cl_sh_status0      = 'b0;
   assign cl_sh_status1      = 'b0;
   assign cl_sh_status2      = 'b0;
@@ -278,8 +275,19 @@ end
 
 
 ////////////////////////////////////////////////////////////////////////
-// Simple "VDIP" wiring for demonstration
+// vdip, vled
 ////////////////////////////////////////////////////////////////////////
+
+logic [7:0] bresp_status;
+
+always_ff @(posedge clk) begin
+    if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00) begin
+        bresp_status <= {6'b0, sh_cl_pcim_bresp};  // Show BRESP[1:0] in LED
+    end
+    if (rst) begin
+        bresp_status <= 8'h00;
+    end
+end
 
 logic [3:0] vdip_func;
 logic [3:0] vdip_sel;
@@ -292,7 +300,6 @@ always_ff @(posedge clk_main_a0) begin
     if (vdip_func == 4'hF) begin
         vdip_bytes[vdip_sel] <= vdip_byte;
     end
-
     cl_sh_status_vled <= { vdip_bytes[vdip_sel], vdip_sel, vdip_func };
 end
 
@@ -301,146 +308,143 @@ end
 // Minimal AXI handling for DMA PCIS writes
 ////////////////////////////////////////////////////////////////////////
 
-assign cl_sh_dma_pcis_awready = 1'b1;
-assign cl_sh_dma_pcis_wready  = 1'b1;
-assign cl_sh_dma_pcis_bresp   = 2'b00;
+logic [1-1:0]                                st_addr_v;
+logic [3-1:0]                                st_data_v;
+logic [2-1:0]                                st_v;
+logic [1-1:0]                                st_p;
+logic [64-1:0]                               st_addr;
+logic [2-1:0][256-1:0]                        st_data;
 
-// We ack the write once we see wlast
-always_ff @(posedge clk) begin
-  cl_sh_dma_pcis_bvalid <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
-  cl_sh_dma_pcis_bid    <= sh_cl_dma_pcis_awid;
-  if (rst) begin
-    cl_sh_dma_pcis_bvalid <= 1'b0;
-    cl_sh_dma_pcis_bid    <= 4'b0;
-  end
-end
+assign cl_sh_dma_pcis_awready                   = 1'b1;
+assign cl_sh_dma_pcis_wready                    = 1'b1;
+assign cl_sh_dma_pcis_bresp                     = '0;
 
-// FIFO that holds addresses from AW channel:
-logic st_addr_v;
-wire st_p;
-logic [63:0] st_addr;
+always_ff @(posedge clk) cl_sh_dma_pcis_bvalid   <= sh_cl_dma_pcis_wvalid & sh_cl_dma_pcis_wlast;
+always_ff @(posedge clk) cl_sh_dma_pcis_bid      <= sh_cl_dma_pcis_awid;
+
 showahead_fifo #(
-    .WIDTH(64),
-    .DEPTH(32)
+    .WIDTH                              ($bits(sh_cl_dma_pcis_awaddr)),
+    .DEPTH                              (32)
 ) st_in_addr_fifo_inst (
-    .aclr      (rst),
-    .wr_clk    (clk),
-    .wr_req    (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
-    .wr_full   (),
-    .wr_data   ({sh_cl_dma_pcis_awaddr}),
+    .aclr                               (rst),
 
-    .rd_clk    (clk),
-    .rd_req    (st_p),
-    .rd_empty  (),
-    .rd_not_empty(st_addr_v),
-    .rd_count  (),
-    .rd_data   (st_addr)
+    .wr_clk                             (clk),
+    .wr_req                             (sh_cl_dma_pcis_awvalid & cl_sh_dma_pcis_awready),
+    .wr_full                            (),
+    .wr_data                            ({sh_cl_dma_pcis_awaddr[64-1:6], 6'h0}),
+
+    .rd_clk                             (clk),
+    .rd_req                             (st_p),
+    .rd_empty                           (),
+    .rd_not_empty                       (st_addr_v),
+    .rd_count                           (),
+    .rd_data                            ({st_addr})
 );
-
-// FIFO that holds the W data+strobe
-// Notice we changed [32] to [31] (top bit) to avoid out-of-range indexing
-logic        st_data_v;
-logic [255:0] st_data;
-logic [31:0]  st_data_strb;
 
 showahead_fifo #(
-    .WIDTH($bits({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[31], sh_cl_dma_pcis_wstrb[0]})),
-    .DEPTH(32)
+    .WIDTH                              ($bits({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[32], sh_cl_dma_pcis_wstrb[0]})),
+    .DEPTH                              (32)
 ) st_in_data_fifo_inst (
-    .aclr      (rst),
-    .wr_clk    (clk),
-    .wr_req    (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
-    .wr_full   (),
-    .wr_data   ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[31], sh_cl_dma_pcis_wstrb[0]}),
+    .aclr                               (rst),
 
-    .rd_clk    (clk),
-    .rd_req    (st_p),
-    .rd_empty  (),
-    .rd_not_empty(st_data_v),
-    .rd_count  (),
-    .rd_data   ({st_data, st_data_strb[31], st_data_strb[0]})
+    .wr_clk                             (clk),
+    .wr_req                             (sh_cl_dma_pcis_wvalid & cl_sh_dma_pcis_wready),
+    .wr_full                            (),
+    .wr_data                            ({sh_cl_dma_pcis_wdata, sh_cl_dma_pcis_wstrb[32], sh_cl_dma_pcis_wstrb[0]}),
+
+    .rd_clk                             (clk),
+    .rd_req                             (st_p),
+    .rd_empty                           (),
+    .rd_not_empty                       (st_data_v[2]),
+    .rd_count                           (),
+    .rd_data                            ({st_data, st_data_v[0+:2]})
 );
 
-assign st_p = st_addr_v & st_data_v;
-
-
+assign st_p                             = st_addr_v & st_data_v[2];
+assign st_v[0]                          = st_addr_v & st_data_v[2] & st_data_v[0];
+assign st_v[1]                          = st_addr_v & st_data_v[2] & st_data_v[1];
 
 ////////////////////////////////////////////////////////////////////////
 // Minimal bridging to PCIM master interface
 ////////////////////////////////////////////////////////////////////////
 
-logic        dma_push;
 logic        dma_r;
-logic        dma_full_a, dma_full_d;
+logic        dma_push;
+logic        dma_full_a;
+logic        dma_full_d;
+logic [63:0] dma_push_b;   // unused (WSTRB not needed now)
 logic [63:0] dma_push_a;   // addresses
-logic [63:0] dma_push_b;   // strobe, or user-coded
 logic [255:0] dma_push_d;  // 256-bit data chunk
+logic [255:0] cl_sh_pcim_wdata_half;
 
-// The snippet references them as well:
-assign dma_r = (~dma_full_a) & (~dma_full_d);
+assign cl_sh_pcim_awuser  = 'b0;
+assign cl_sh_pcim_aruser  = 'b0;
+assign cl_sh_pcim_arid    = 16'b0;
+assign cl_sh_pcim_araddr  = 64'b0;
+assign cl_sh_pcim_arlen   = 8'b0;
+assign cl_sh_pcim_arsize  = 3'b0;
+assign cl_sh_pcim_arburst = 2'b0;
+assign cl_sh_pcim_arcache = 4'b0;
+assign cl_sh_pcim_arlock  = 1'b0;
+assign cl_sh_pcim_arprot  = 3'b0;
+assign cl_sh_pcim_arqos   = 4'b0;
+assign cl_sh_pcim_arvalid = 1'b0;
+assign cl_sh_pcim_rready  = 1'b0;
 
-// Simple assignment for demonstration
-// (In a real design you'd set dma_push=1 when you have data, etc.)
-assign dma_push = 1'b0;
-assign dma_push_a = 64'h0;
-assign dma_push_b = 64'h0;
-assign dma_push_d = 256'h0;
+assign cl_sh_pcim_awid    = 4'b0000;
+assign cl_sh_pcim_awlen   = 8'b0;
+assign cl_sh_pcim_awsize  = 3'b110;
+assign cl_sh_pcim_wlast   = 1'b1;
+assign cl_sh_pcim_bready  = 1'b1;  // Always ready to accept BRESP
 
-// PCIM Master signals
-assign cl_sh_pcim_awid   = 4'b0;
-assign cl_sh_pcim_awlen  = 8'b0;
-assign cl_sh_pcim_awsize = 3'b110;
-assign cl_sh_pcim_wlast  = 1'b1;
-assign cl_sh_pcim_bready = 1'b1;  // always accept B
+assign dma_r     = ~dma_full_a & ~dma_full_d;
 
-logic [255:0] cl_sh_pcim_wdata_h;  // half of final 512 bits
+assign cl_sh_pcim_wdata   = {2{cl_sh_pcim_wdata_half}};  // Duplicate 256b to 512b
 
-assign cl_sh_pcim_wdata = {2{cl_sh_pcim_wdata_h}};
-
-// Address FIFO
+// --------------------------------------------------------------------
+// FIFO Instances
+// --------------------------------------------------------------------
 showahead_fifo #(
-    .WIDTH($bits(dma_push_a)),
+    .WIDTH(64),
     .FULL_THRESH(512-64),
     .DEPTH(512)
 ) dma_addr_fifo_inst (
-    .aclr    (rst),
+    .aclr          (rst),
 
-    .wr_clk  (clk),
-    .wr_req  (dma_push & dma_r),
-    .wr_full (dma_full_a),
-    .wr_data (dma_push_a),
+    .wr_clk        (clk),
+    .wr_req        (dma_push & dma_r),
+    .wr_full       (dma_full_a),
+    .wr_data       (dma_push_a),
 
-    .rd_clk  (clk),
-    .rd_req  (cl_sh_pcim_awvalid & sh_cl_pcim_awready),
-    .rd_empty(),
-    .rd_not_empty(cl_sh_pcim_awvalid),
-    .rd_count(),
-    .rd_data (cl_sh_pcim_awaddr)
+    .rd_clk        (clk),
+    .rd_req        (cl_sh_pcim_awvalid & cl_sh_pcim_awready),
+    .rd_empty      (),
+    .rd_not_empty  (cl_sh_pcim_awvalid),
+    .rd_count      (),
+    .rd_data       ({cl_sh_pcim_awaddr})
 );
 
-// Data FIFO
 showahead_fifo #(
-    .WIDTH($bits({dma_push_b, dma_push_d})),
+    .WIDTH(256+64),
     .FULL_THRESH(512-64),
     .DEPTH(512)
 ) dma_data_fifo_inst (
-    .aclr    (rst),
+    .aclr          (rst),
 
-    .wr_clk  (clk),
-    .wr_req  (dma_push & dma_r),
-    .wr_full (dma_full_d),
-    .wr_full_b (),
-    .wr_count  (),
-    .wr_data ({dma_push_b, dma_push_d}),
+    .wr_clk        (clk),
+    .wr_req        (dma_push & dma_r),
+    .wr_full       (dma_full_d),
+    .wr_full_b     (),
+    .wr_count      (),
+    .wr_data       (dma_push_d),
 
-    .rd_clk  (clk),
-    .rd_req  (cl_sh_pcim_wvalid & sh_cl_pcim_wready),
-    .rd_empty(),
-    .rd_not_empty(cl_sh_pcim_wvalid),
-    .rd_count(),
-    .rd_data ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_h})
+    .rd_clk        (clk),
+    .rd_req        (cl_sh_pcim_wvalid & cl_sh_pcim_wready),
+    .rd_empty      (),
+    .rd_not_empty  (cl_sh_pcim_wvalid),
+    .rd_count      (),
+    .rd_data       ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_half})
 );
-
 
 ////////////////////////////////////////////////////////////////////////
 // Example “top_f2” instance (from your snippet)
@@ -466,9 +470,9 @@ showahead_fifo #(
     .priv_bytes        (vdip_bytes),
 
     // PCIE bridging (input side)
-    .pcie_v            (/* your signals here, or st_v if you prefer */ ),
-    .pcie_a            (/* st_addr if you prefer */ ),
-    .pcie_d            (/* st_data if you prefer */ ),
+    .pcie_v(st_v),
+    .pcie_a(st_addr),
+    .pcie_d(st_data),
 
     // Example DMA push
     .dma_r             (dma_r),

@@ -230,36 +230,60 @@ always_ff @(posedge clk) begin
     end
 end
 
+//------------------------------------------------------------------------------
+// vDIP / vLED debug multiplexer
+//   func = 0xF → write user-byte page
+//   func = 0x0 → read  user-byte page
+//   func = 0xE → read  captured AW-address (8 B)
+//   func = 0xD → read  protocol / BRESP info
+//------------------------------------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////
-// vdip, vled
-////////////////////////////////////////////////////////////////////////
+logic [15:0][7:0] vdip_mem;
+logic [63:0]      awaddr_lat;
+logic [7:0]       bresp_lat;
+logic [7:0]       led_byte;
 
-logic [7:0] bresp_status;
-
-always_ff @(posedge clk) begin
-    if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00) begin
-        bresp_status <= {6'b0, sh_cl_pcim_bresp};  // Show BRESP[1:0] in LED
-    end
-    if (rst) begin
-        bresp_status <= 8'h00;
-    end
-end
-
-logic [3:0] vdip_func;
-logic [3:0] vdip_sel;
-logic [7:0] vdip_byte;
-logic [15:0][7:0] vdip_bytes; // 16-entry array, each 8 bits
-
-assign {vdip_byte, vdip_sel, vdip_func} = sh_cl_status_vdip;
+wire [3:0] func    = sh_cl_status_vdip[3:0];
+wire [3:0] sel_idx = sh_cl_status_vdip[7:4];
+wire [7:0] data    = sh_cl_status_vdip[15:8];
 
 always_ff @(posedge clk_main_a0) begin
-    if (vdip_func == 4'hF) begin
-        vdip_bytes[vdip_sel] <= vdip_byte;
-    end
-    cl_sh_status_vled <= { vdip_bytes[vdip_sel], vdip_sel, vdip_func };
-end
+    if (rst) begin
+        awaddr_lat        <= 64'h0;
+        bresp_lat         <= 8'h00;
+        led_byte          <= 8'h00;
+        vdip_mem          <= '{default:8'h00};
+        cl_sh_status_vled <= 16'h0000;
+    end else begin
+        // capture the last AW address presented to PCIM
+        if (cl_sh_pcim_awvalid && sh_cl_pcim_awready)
+            awaddr_lat <= cl_sh_pcim_awaddr;
 
+        // latch non-OK BRESP codes
+        if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00)
+            bresp_lat <= {6'b0, sh_cl_pcim_bresp};
+
+        // user write into 16-byte page
+        if (func == 4'hF)
+            vdip_mem[sel_idx] <= data;
+
+        // select what the LEDs show
+        unique case (func)
+            4'h0: led_byte <= vdip_mem[sel_idx];
+            4'hE: led_byte <= awaddr_lat >> (sel_idx * 8);
+            4'hD: led_byte <= (sel_idx == 0) ? bresp_lat
+                           : (sel_idx == 1) ? {
+                                 cl_sh_pcim_arvalid, sh_cl_pcim_arready,
+                                 sh_cl_pcim_rvalid , cl_sh_pcim_rready ,
+                                 cl_sh_pcim_awvalid, sh_cl_pcim_awready,
+                                 cl_sh_pcim_wvalid , sh_cl_pcim_wready
+                             } : 8'h00;
+            default: led_byte <= 8'h00;
+        endcase
+
+        cl_sh_status_vled <= {led_byte, sel_idx, func};
+    end
+end
 
 ////////////////////////////////////////////////////////////////////////
 // Minimal AXI handling for DMA PCIS writes
@@ -430,7 +454,7 @@ showahead_fifo #(
     .avmm_readdatavalid(avmm_fh_readdatavalid[0]),
     .avmm_waitrequest  (avmm_fh_waitrequest[0]),
 
-    .priv_bytes        (vdip_bytes),
+    .priv_bytes        (vdip_mem),
 
     // PCIE bridging (input side)
     .pcie_v(st_v),

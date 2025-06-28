@@ -231,17 +231,29 @@ always_ff @(posedge clk) begin
 end
 
 //------------------------------------------------------------------------------
-// vDIP / vLED debug multiplexer
-//   func = 0xF → write user-byte page
-//   func = 0x0 → read  user-byte page
-//   func = 0xE → read  captured AW-address (8 B)
-//   func = 0xD → read  protocol / BRESP info
+// vDIP / vLED multiplexer with edge-counting PCIM counters
+//   func = 0xF : write user-byte page
+//   func = 0x0 : read  user-byte page
+//   func = 0xE : read  captured AW address (8 B)
+//   func = 0xD : read  protocol / BRESP info
+//   func = 0xC : read  a PCIM counter
+//       sel_idx[3:2]  00 awvalid  01 awready  10 wvalid  11 wready
+//       sel_idx[1:0]  byte lane 0-3
 //------------------------------------------------------------------------------
 
 logic [15:0][7:0] vdip_mem;
 logic [63:0]      awaddr_lat;
 logic [7:0]       bresp_lat;
 logic [7:0]       led_byte;
+
+// counters
+logic [31:0] pcim_cnt_awvalid;
+logic [31:0] pcim_cnt_awready;
+logic [31:0] pcim_cnt_wvalid;
+logic [31:0] pcim_cnt_wready;
+
+// edge detectors
+logic prev_awvalid, prev_awready, prev_wvalid, prev_wready;
 
 wire [3:0] func    = sh_cl_status_vdip[3:0];
 wire [3:0] sel_idx = sh_cl_status_vdip[7:4];
@@ -254,8 +266,27 @@ always_ff @(posedge clk_main_a0) begin
         led_byte          <= 8'h00;
         vdip_mem          <= '{default:8'h00};
         cl_sh_status_vled <= 16'h0000;
+        pcim_cnt_awvalid  <= 32'd0;
+        pcim_cnt_awready  <= 32'd0;
+        pcim_cnt_wvalid   <= 32'd0;
+        pcim_cnt_wready   <= 32'd0;
+        prev_awvalid      <= 1'b0;
+        prev_awready      <= 1'b0;
+        prev_wvalid       <= 1'b0;
+        prev_wready       <= 1'b0;
     end else begin
-        // capture the last AW address presented to PCIM
+        // rising-edge counters
+        if (~prev_awvalid & cl_sh_pcim_awvalid) pcim_cnt_awvalid <= pcim_cnt_awvalid + 1;
+        if (~prev_awready & sh_cl_pcim_awready) pcim_cnt_awready <= pcim_cnt_awready + 1;
+        if (~prev_wvalid  & cl_sh_pcim_wvalid ) pcim_cnt_wvalid  <= pcim_cnt_wvalid  + 1;
+        if (~prev_wready  & sh_cl_pcim_wready ) pcim_cnt_wready  <= pcim_cnt_wready  + 1;
+
+        prev_awvalid <= cl_sh_pcim_awvalid;
+        prev_awready <= sh_cl_pcim_awready;
+        prev_wvalid  <= cl_sh_pcim_wvalid;
+        prev_wready  <= sh_cl_pcim_wready;
+
+        // capture last AW address
         if (cl_sh_pcim_awvalid && sh_cl_pcim_awready)
             awaddr_lat <= cl_sh_pcim_awaddr;
 
@@ -263,11 +294,11 @@ always_ff @(posedge clk_main_a0) begin
         if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00)
             bresp_lat <= {6'b0, sh_cl_pcim_bresp};
 
-        // user write into 16-byte page
+        // user writes
         if (func == 4'hF)
             vdip_mem[sel_idx] <= data;
 
-        // select what the LEDs show
+        // LED selector
         unique case (func)
             4'h0: led_byte <= vdip_mem[sel_idx];
             4'hE: led_byte <= awaddr_lat >> (sel_idx * 8);
@@ -278,6 +309,16 @@ always_ff @(posedge clk_main_a0) begin
                                  cl_sh_pcim_awvalid, sh_cl_pcim_awready,
                                  cl_sh_pcim_wvalid , sh_cl_pcim_wready
                              } : 8'h00;
+            4'hC: begin
+                logic [31:0] sel_cnt;
+                unique case (sel_idx[3:2])
+                    2'b00: sel_cnt = pcim_cnt_awvalid;
+                    2'b01: sel_cnt = pcim_cnt_awready;
+                    2'b10: sel_cnt = pcim_cnt_wvalid;
+                    2'b11: sel_cnt = pcim_cnt_wready;
+                endcase
+                led_byte <= sel_cnt >> (sel_idx[1:0] * 8);
+            end
             default: led_byte <= 8'h00;
         endcase
 

@@ -242,10 +242,13 @@ end
 //   func = 0xB : read  a handshake counter
 //       sel_idx[3:2] 00 aw_hs   01 w_hs   10/11 reserved (returns 0)
 //       sel_idx[1:0] byte lane 0-3
+//   func = 0xA : read  captured WSTRB mask (8 B)
+//       sel_idx       byte lane 0-7
 //------------------------------------------------------------------------------
 
 logic [15:0][7:0] vdip_mem;
 logic [63:0]      awaddr_lat;
+logic [63:0]      wstrb_lat;
 logic [7:0]       bresp_lat;
 logic [7:0]       led_byte;
 
@@ -266,6 +269,7 @@ wire [7:0] data    = sh_cl_status_vdip[15:8];
 always_ff @(posedge clk_main_a0) begin
     if (rst) begin
         awaddr_lat        <= 64'h0;
+        wstrb_lat         <= 64'h0;
         bresp_lat         <= 8'h00;
         led_byte          <= 8'h00;
         vdip_mem          <= '{default:8'h00};
@@ -300,6 +304,10 @@ always_ff @(posedge clk_main_a0) begin
         // capture last AW address
         if (cl_sh_pcim_awvalid && sh_cl_pcim_awready)
             awaddr_lat <= cl_sh_pcim_awaddr;
+
+        // capture last WSTRB mask
+        if (cl_sh_pcim_wvalid && sh_cl_pcim_wready)
+            wstrb_lat <= cl_sh_pcim_wstrb;
 
         // latch non-OK BRESP codes
         if (sh_cl_pcim_bvalid && sh_cl_pcim_bresp != 2'b00)
@@ -342,6 +350,7 @@ always_ff @(posedge clk_main_a0) begin
                 endcase
                 led_byte <= sel_cnt >> (sel_idx[1:0] * 8);
             end
+            4'hA: led_byte <= wstrb_lat >> (sel_idx * 8);
             default: led_byte <= 8'h00;
         endcase
 

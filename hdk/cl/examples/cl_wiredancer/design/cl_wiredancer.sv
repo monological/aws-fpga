@@ -496,7 +496,8 @@ showahead_fifo #(
     .wr_full       (dma_full_d),
     .wr_full_b     (),
     .wr_count      (),
-    .wr_data       ({dma_push_b, dma_push_d}),
+    //.wr_data       ({dma_push_b, dma_push_d}),
+    .wr_data ({64'hFFFF_FFFF_FFFF_FFFF, {8{32'hDEAD_BEEF}}}),
 
     .rd_clk        (clk),
     .rd_req        (cl_sh_pcim_wvalid & cl_sh_pcim_wready),

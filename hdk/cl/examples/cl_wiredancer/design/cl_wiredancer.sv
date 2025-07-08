@@ -507,6 +507,57 @@ showahead_fifo #(
     .rd_data       ({cl_sh_pcim_wstrb, cl_sh_pcim_wdata_half})
 );
 
+// --------------------------------------------------------------------
+// ILA hookup for PCIM interface
+// --------------------------------------------------------------------
+axi_bus_t cl_sh_pcim_bus();
+assign cl_sh_pcim_bus.awvalid = cl_sh_pcim_awvalid;
+assign cl_sh_pcim_bus.awaddr  = cl_sh_pcim_awaddr;
+assign cl_sh_pcim_bus.awlen   = cl_sh_pcim_awlen;
+assign cl_sh_pcim_bus.awsize  = cl_sh_pcim_awsize;
+assign cl_sh_pcim_bus.awburst = cl_sh_pcim_awburst;
+assign cl_sh_pcim_bus.awready = sh_cl_pcim_awready;
+assign cl_sh_pcim_bus.wvalid  = cl_sh_pcim_wvalid;
+assign cl_sh_pcim_bus.wstrb   = cl_sh_pcim_wstrb;
+assign cl_sh_pcim_bus.wlast   = cl_sh_pcim_wlast;
+assign cl_sh_pcim_bus.wready  = sh_cl_pcim_wready;
+assign cl_sh_pcim_bus.wdata   = cl_sh_pcim_wdata;
+assign cl_sh_pcim_bus.bid     = sh_cl_pcim_bid;
+assign cl_sh_pcim_bus.bresp   = sh_cl_pcim_bresp;
+assign cl_sh_pcim_bus.bvalid  = sh_cl_pcim_bvalid;
+assign cl_sh_pcim_bus.bready  = cl_sh_pcim_bready;
+assign cl_sh_pcim_bus.arvalid = cl_sh_pcim_arvalid;
+assign cl_sh_pcim_bus.araddr  = cl_sh_pcim_araddr;
+assign cl_sh_pcim_bus.arlen   = cl_sh_pcim_arlen;
+assign cl_sh_pcim_bus.arsize  = cl_sh_pcim_arsize;
+assign cl_sh_pcim_bus.arburst = cl_sh_pcim_arburst;
+assign cl_sh_pcim_bus.arready = sh_cl_pcim_arready;
+assign cl_sh_pcim_bus.rdata   = sh_cl_pcim_rdata;
+assign cl_sh_pcim_bus.rresp   = sh_cl_pcim_rresp;
+assign cl_sh_pcim_bus.rid     = sh_cl_pcim_rid;
+assign cl_sh_pcim_bus.rlast   = sh_cl_pcim_rlast;
+assign cl_sh_pcim_bus.rvalid  = sh_cl_pcim_rvalid;
+assign cl_sh_pcim_bus.rready  = cl_sh_pcim_rready;
+assign cl_sh_pcim_bus.awid    = cl_sh_pcim_awid;
+assign cl_sh_pcim_bus.arid    = cl_sh_pcim_arid;
+
+cl_ila CL_ILA (
+    .aclk          (clk),
+    .drck          (drck),
+    .shift         (shift),
+    .tdi           (tdi),
+    .update        (update),
+    .sel           (sel),
+    .tdo           (tdo),
+    .tms           (tms),
+    .tck           (tck),
+    .runtest       (runtest),
+    .reset         (reset),
+    .capture       (capture),
+    .bscanid_en    (bscanid_en),
+    .cl_sh_pcim_bus(cl_sh_pcim_bus)
+);
+
 ////////////////////////////////////////////////////////////////////////
 // Example “top_f2” instance (from your snippet)
 ////////////////////////////////////////////////////////////////////////
